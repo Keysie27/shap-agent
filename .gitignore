@@ -1,0 +1,24 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints
+
+# Data and model uploads
+data/
+models/
+
+# Environment secrets
+.env
+
+# Streamlit cache
+.streamlit/
