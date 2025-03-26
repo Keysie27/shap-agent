@@ -13,10 +13,6 @@ venv/
 # Jupyter
 .ipynb_checkpoints
 
-# Data and model uploads
-data/
-models/
-
 # Environment secrets
 .env
 
