@@ -10,6 +10,7 @@ This app is designed to:
 
 ## 🗂️ Project Structure
 
+```
 shap-agent/
 │
 ├── agent/
@@ -46,6 +47,7 @@ shap-agent/
 ├── .gitignore                      # Ignore venv, .env, models, data, etc.
 ├── README.md                       # Full documentation for using and running the app
 └── requirements.txt                # Python dependencies
+```
 
 ## 🚀 How to Use
 
