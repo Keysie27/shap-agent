@@ -43,14 +43,14 @@ def main():
             st.stop()
 
     # UI Elements
-    st.subheader("Select a model to analyze:")
+    st.subheader("1. Select a model to analyze:")
     model_name = st.selectbox(
         "Model:", 
         ["logistic_regression.pkl", "random_forest.pkl"],
         label_visibility="collapsed"
     )
     
-    st.subheader("Upload your dataset:")
+    st.subheader("2. Upload your dataset:")
     data_file = st.file_uploader(
         "Choose a CSV file", 
         type=["csv"],
@@ -78,7 +78,7 @@ def main():
                 shap_values = explainer.generate_shap_values(data)
                 
                 # Show raw SHAP values
-                with st.expander("View Raw SHAP Values", expanded=True):
+                with st.expander("🧩 SHAP raw values", expanded=True):
                     shap_df = pd.DataFrame(
                         shap_values[0] if len(shap_values.shape) == 3 else shap_values,
                         columns=data.columns
@@ -86,7 +86,7 @@ def main():
                     st.dataframe(shap_df.head(), use_container_width=True)
 
             # SHAP Visualizations (collapsed by default)
-            with st.expander("📊 SHAP Visualizations", expanded=False):
+            with st.expander("📊 SHAP visualizations", expanded=False):
                 with st.spinner("Generating visualizations..."):
                     plots = visualizer.create_all_plots(shap_values, data)
                     

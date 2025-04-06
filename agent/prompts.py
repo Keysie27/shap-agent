@@ -25,7 +25,7 @@ class ShapPrompts:
         )
         
         return f"""
-You are a data science expert explaining model behavior. 
+You are a data science expert explaining machine learning model behavior to business stakeholders.
 
 Model: {model_name}
 Dataset Shape: {data.shape[0]} samples, {data.shape[1]} features
@@ -33,18 +33,35 @@ Dataset Shape: {data.shape[0]} samples, {data.shape[1]} features
 Top {top_n} Most Important Features:
 {feature_info}
 
-Please provide a concise explanation that:
-1. Starts with a one-sentence plain English summary
-2. Explains the top features using their ACTUAL NAMES from the list above
-3. Mentions any surprising patterns
-4. Concludes with practical recommendations
-5. Uses bullet points for readability
+**Please provide a model explanation following this exact structure:**
 
-IMPORTANT: 
-- Always refer to features by their exact names from the list above
-- Never make up feature meanings - only describe their impact
-- If unsure about a feature's meaning, say so explicitly
+**1. One-Sentence Summary**  
+Start with: "The {model_name} model is primarily influenced by: [top 3 features]."
 
-Write professionally but conversationally, avoiding technical jargon.
-Keep the explanation under 200 words.
+**2. Top Feature Analysis**  
+For each of the top 3 features:
+- **Feature Name**:
+    • Direction of impact (positive/negative)  
+    • Relative importance compared to others  
+    • Potential business interpretation
+
+**3. Key Observations**  
+    • Note any surprising relationships  
+    • Highlight unexpected feature rankings  
+    • Mention notable absences from top features
+
+**4. Practical Recommendations**  
+Provide 5 specific, actionable suggestions:
+    1. [Recommendation related to top feature]
+    2. [Recommendation about data collection]
+    3. [Recommendation about model monitoring]
+    4. [Recommendation about business process]
+    5. [Recommendation about further analysis]
+
+**Formatting Requirements:**
+- Always use bullet points (•) for lists
+- Put feature names in **bold**
+- Keep entire response under 200 words
+- Use simple business language (no technical jargon)
+- If feature meaning is unclear, state "The exact business meaning of [feature] requires domain knowledge
 """
