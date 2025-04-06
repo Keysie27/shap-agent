@@ -21,7 +21,7 @@ cd shap-agent
 
 2. **Create a virtual environment (optional)**
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 ```
 

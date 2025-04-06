@@ -5,7 +5,7 @@ base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 model_dir = os.path.join(base_dir, "models", "sample_models")
 
 # Lista de modelos a inspeccionar
-model_files = ["random_forest.pkl", "logistic_regression.pkl"]
+model_files = ["random_forest.pkl", "logistic_regression_2.pkl"]
 
 for model_file in model_files:
     model_path = os.path.join(model_dir, model_file)
