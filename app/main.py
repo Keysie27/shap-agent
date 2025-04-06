@@ -14,7 +14,28 @@ def main():
     # Initial app configuration
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
     st.title("🤖 SHAP-Agent: Model Explanation")
-    
+    st.markdown("""
+    This tool helps you understand how your machine learning model makes decisions using SHAP (SHapley Additive exPlanations).
+    Upload your dataset and select a model to get feature importance analysis and model behavior explanation.
+    """)
+
+    # Sidebar info
+    st.sidebar.markdown("""
+    ### ℹ️ Instructions:
+    1. Select a pre-trained model.
+    2. Upload your dataset. Supported formats: CSV.
+    3. Wait for the explanation
+
+    ### 📌 Notes:
+    - Dataset should contain only features (no target column)
+    - Non-numeric columns will be automatically converted
+
+    ### 📊 Visualizations Guide:
+    - **Feature Importance**: Shows which features matter most
+    - **Impact Distribution**: Reveals how features affect predictions
+    - **Dependence Plots**: Show relationships for top features
+    """)
+
     # Check Ollama status
     with st.spinner("Checking Ollama service..."):
         if not ShapAgent.check_ollama_alive():
@@ -82,7 +103,7 @@ def main():
                 prompt = ShapPrompts.get_analysis_prompt(
                     model_name=model_name,
                     shap_values=shap_values,
-                    data_shape=data.shape
+                    data=data
                 )
                 explanation = agent.generate_explanation(
                     summary_text=prompt,
