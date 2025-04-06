@@ -1,10 +1,10 @@
 # Streamlit UI logic: file upload, SHAP explanation, agent output
 import streamlit as st
-import shap
 import os
 import joblib
 import numpy as np
 import pandas as pd
+import shap
 from io import BytesIO
 from app.file_handler import load_dataset
 from utils.shap_explainer import generate_shap_summary
@@ -34,6 +34,7 @@ selected_model_name = st.selectbox(
 data_file = st.file_uploader("Sube tu dataset (.csv)", type=["csv"])
 
 if selected_model_name and data_file:
+    # Sección de carga de modelo y datos
     with st.spinner("Cargando modelo y dataset..."):
         try:
             # Cargar modelo
@@ -46,84 +47,83 @@ if selected_model_name and data_file:
                 st.stop()
             
             # Cargar y validar dataset
-            try:
-                data = load_dataset(data_file)
-                
-                # Mostrar vista previa
-                st.write("📄 Vista previa del dataset:", data.head())
-                
-                # Verificar tipos de datos
-                if not all(pd.api.types.is_numeric_dtype(dt) for dt in data.dtypes):
-                    st.warning("⚠️ Se detectaron columnas no numéricas. Convirtiendo...")
-                    data = data.apply(pd.to_numeric, errors='coerce')
-                    if data.isnull().any().any():
-                        st.error("❌ No se pudieron convertir todas las columnas a numéricas")
-                        st.stop()
-                
-                # Eliminar target si existe
-                if 'target' in data.columns:
-                    data = data.drop(columns=['target'])
-                
-                st.success(f"✅ Modelo cargado: {selected_model_name}")
-                st.success(f"✅ Dataset cargado. Forma: {data.shape}")
-                
-            except Exception as e:
-                st.error(f"❌ Error al cargar el dataset: {str(e)}")
-                st.stop()
-
-            # Generar explicación SHAP (con manejo mejorado)
-            with st.spinner("Generando resumen SHAP..."):
-                try:
-                    # Llamada mejorada a SHAP
-                    explainer = shap.Explainer(model, data)
-                    shap_values = explainer(data)
-                    
-                    # Manejo de diferentes tipos de salida SHAP
-                    if hasattr(shap_values, 'values'):
-                        shap_values = np.abs(shap_values.values)
-                    else:
-                        shap_values = np.abs(shap_values)
-                    
-                    # Calcular importancia media
-                    mean_shap = pd.Series(np.mean(shap_values, axis=0))
-                    mean_shap.index = data.columns
-                    mean_shap = mean_shap.sort_values(ascending=False)
-                    
-                    # Formatear resumen
-                    shap_summary = "Top 10 características importantes:\n\n"
-                    for feature, value in mean_shap.head(10).items():
-                        shap_summary += f"- {feature}: {value:.4f}\n"
-                        
-                    st.success("✅ SHAP calculado correctamente")
-                    
-                except Exception as e:
-                    st.error(f"❌ Error en SHAP: {str(e)}")
+            data = load_dataset(data_file)
+            
+            # Mostrar vista previa
+            st.write("📄 Vista previa del dataset:", data.head())
+            
+            # Verificar tipos de datos
+            if not all(pd.api.types.is_numeric_dtype(dt) for dt in data.dtypes):
+                st.warning("⚠️ Se detectaron columnas no numéricas. Convirtiendo...")
+                data = data.apply(pd.to_numeric, errors='coerce')
+                if data.isnull().any().any():
+                    st.error("❌ No se pudieron convertir todas las columnas a numéricas")
                     st.stop()
-
-            # Generar explicación en lenguaje natural
-            with st.spinner("Generando explicación con IA..."):
-                try:
-                    explanation = explain_with_agent(shap_summary, data.shape)
-                except Exception as e:
-                    st.error(f"❌ Error al generar explicación: {str(e)}")
-                    st.stop()
-
-            # Mostrar resultados
-            st.success("✅ Explicación lista")
-            st.subheader("🧠 Explicación del Modelo")
-            st.write(explanation)
-
-            # Botón de descarga
-            st.download_button(
-                "📥 Descargar Explicación",
-                explanation,
-                file_name=f"explicacion_{selected_model_name.lower().replace(' ', '_')}.txt",
-                mime="text/plain"
-            )
-
+            
+            # Eliminar target si existe
+            if 'target' in data.columns:
+                data = data.drop(columns=['target'])
+            
+            st.success(f"✅ Modelo cargado: {selected_model_name}")
+            st.success(f"✅ Dataset cargado. Forma: {data.shape}")
+            
         except Exception as e:
-            st.error(f"❌ Error crítico: {str(e)}")
+            st.error(f"❌ Error al cargar el dataset: {str(e)}")
             st.stop()
+
+    # Sección SHAP - Separada para mejor control del spinner
+    shap_values = None
+    with st.spinner("Generando resumen SHAP..."):
+        try:
+            explainer = shap.Explainer(model, data)
+            shap_values = explainer(data)
+            
+            if hasattr(shap_values, 'values'):
+                abs_shap = np.abs(shap_values.values)
+            else:
+                abs_shap = np.abs(shap_values)
+            
+            mean_shap = pd.Series(np.mean(abs_shap, axis=0))
+            mean_shap.index = data.columns
+            mean_shap = mean_shap.sort_values(ascending=False)
+            
+            # Mostrar valores SHAP
+            st.subheader("📊 Valores SHAP")
+            st.write("Valores SHAP completos:", shap_values.values)
+            st.write("Importancia media de características:", mean_shap)
+            
+            shap_summary = "Top 10 características importantes:\n\n"
+            for feature, value in mean_shap.head(10).items():
+                shap_summary += f"- {feature}: {value:.4f}\n"
+                
+            st.success("✅ SHAP calculado correctamente")
+            
+        except Exception as e:
+            st.error(f"❌ Error en SHAP: {str(e)}")
+            st.stop()
+
+    # Sección explicación IA - Con manejo explícito del spinner
+    explanation = None
+    with st.spinner("Generando explicación con IA..."):
+        try:
+            explanation = explain_with_agent(shap_summary, data.shape)
+            st.success("✅ Explicación generada correctamente")
+        except Exception as e:
+            st.error(f"❌ Error al generar explicación: {str(e)}")
+            st.stop()
+
+    # Mostrar resultados solo si todo salió bien
+    if explanation:
+        st.subheader("🧠 Explicación del Modelo")
+        st.write(explanation)
+
+        # Botón de descarga
+        st.download_button(
+            "📥 Descargar Explicación",
+            explanation,
+            file_name=f"explicacion_{selected_model_name.lower().replace(' ', '_')}.txt",
+            mime="text/plain"
+        )
 
 # Sección de información adicional
 st.sidebar.markdown("""
