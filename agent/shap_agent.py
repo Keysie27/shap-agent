@@ -1,31 +1,57 @@
-# This file handles interaction with a local LLM (Ollama) to convert SHAP summaries into plain language
-
+# agent/shap_agent.py
 import os
 import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
-AGENT_PROVIDER = os.getenv("AGENT_PROVIDER", "ollama")
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "mistral")
+class ShapAgent:
+    def __init__(self):
+        self.provider = os.getenv("AGENT_PROVIDER", "ollama")
+        self.model = os.getenv("OLLAMA_MODEL", "mistral")
+        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "60"))  # Default 60 segundos
 
+    @staticmethod
+    def check_ollama_alive(timeout=5):
+        """Versión mejorada del check con timeout configurable"""
+        try:
+            res = requests.get("http://localhost:11434", timeout=timeout)
+            return res.status_code == 200
+        except requests.exceptions.RequestException:
+            return False
+        except Exception:
+            return False
 
-def explain_with_agent(summary_text: str, data_shape: tuple) -> str:
-    """
-    Main entry point to call the language agent.
-    Currently supports only Ollama locally.
-    """
-    if AGENT_PROVIDER == "ollama":
-        return use_ollama_agent(summary_text, data_shape)
-    else:
-        return "⚠️ Agent provider not supported. Please check your .env file."
+    def generate_explanation(self, summary_text, data_shape):
+        """Combina lo mejor de ambas versiones con mejor manejo de errores"""
+        if self.provider != "ollama":
+            return "⚠️ Agent provider not supported. Check your .env file"
 
+        prompt = self._build_prompt(summary_text, data_shape)
+        
+        try:
+            response = requests.post(
+                "http://localhost:11434/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                },
+                timeout=self.timeout
+            )
+            response.raise_for_status()
+            return response.json().get("response", "⚠️ No response from LLM")
+            
+        except requests.exceptions.Timeout:
+            return "⚠️ Ollama timeout - Is the model loaded? Try: ollama pull " + self.model
+        except requests.exceptions.RequestException as e:
+            return f"⚠️ Ollama connection error: {str(e)}"
+        except Exception as e:
+            return f"⚠️ Unexpected error: {str(e)}"
 
-def use_ollama_agent(summary_text: str, data_shape: tuple) -> str:
-    """
-    Uses Ollama API locally to generate explanation from SHAP summary.
-    """
-    prompt = f"""
+    def _build_prompt(self, summary_text, data_shape):
+        """Construye el prompt manteniendo tu formato original"""
+        return f"""
 You are an AI assistant that explains how machine learning models work.
 This dataset has {data_shape[0]} rows and {data_shape[1]} features.
 
@@ -33,24 +59,4 @@ Given the SHAP global summary below, explain in simple English what the model is
 
 SHAP Summary:
 {summary_text}
-    """
-
-    try:
-        response = requests.post("http://localhost:11434/api/generate", json={
-            "model": OLLAMA_MODEL,
-            "prompt": prompt,
-            "stream": False
-        })
-        result = response.json()
-        return result.get("response", "⚠️ Error: No response from Ollama.")
-    except Exception as e:
-        return f"⚠️ Could not connect to Ollama. Make sure it is running. Error: {str(e)}"
-
-
-# Check if Ollama is running
-def check_ollama_alive():
-    try:
-        res = requests.get("http://localhost:11434")
-        return res.status_code == 200
-    except Exception:
-        return False
+"""

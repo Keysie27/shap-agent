@@ -1,6 +1,6 @@
 # Ensure SHAP explanation works with a known model and dataset
 
-from utils.shap_explainer import generate_shap_summary
+from shap_tools.shap_explainer import generate_shap_summary
 from app.file_handler import load_model, load_dataset
 
 def test_shap_summary_from_random_forest():
