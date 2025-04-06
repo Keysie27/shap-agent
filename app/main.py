@@ -1,5 +1,6 @@
 # Streamlit UI logic: file upload, SHAP explanation, agent output
 import streamlit as st
+import shap
 import os
 import joblib
 import numpy as np
@@ -70,10 +71,31 @@ if selected_model_name and data_file:
                 st.error(f"❌ Error al cargar el dataset: {str(e)}")
                 st.stop()
 
-            # Generar explicación SHAP
+            # Generar explicación SHAP (con manejo mejorado)
             with st.spinner("Generando resumen SHAP..."):
                 try:
-                    shap_summary = generate_shap_summary(model, data)
+                    # Llamada mejorada a SHAP
+                    explainer = shap.Explainer(model, data)
+                    shap_values = explainer(data)
+                    
+                    # Manejo de diferentes tipos de salida SHAP
+                    if hasattr(shap_values, 'values'):
+                        shap_values = np.abs(shap_values.values)
+                    else:
+                        shap_values = np.abs(shap_values)
+                    
+                    # Calcular importancia media
+                    mean_shap = pd.Series(np.mean(shap_values, axis=0))
+                    mean_shap.index = data.columns
+                    mean_shap = mean_shap.sort_values(ascending=False)
+                    
+                    # Formatear resumen
+                    shap_summary = "Top 10 características importantes:\n\n"
+                    for feature, value in mean_shap.head(10).items():
+                        shap_summary += f"- {feature}: {value:.4f}\n"
+                        
+                    st.success("✅ SHAP calculado correctamente")
+                    
                 except Exception as e:
                     st.error(f"❌ Error en SHAP: {str(e)}")
                     st.stop()
