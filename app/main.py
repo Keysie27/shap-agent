@@ -109,29 +109,65 @@ def main():
 
                 # SHAP Analysis
                 st.header("🔍 SHAP Analysis")
-                explainer = ShapExplainer(model)
-                visualizer = ShapVisualizer()
-                
-                with st.spinner("Calculating SHAP values..."):
-                    shap_values = explainer.generate_shap_values(data)
-                    
-                    # Show raw SHAP values
-                    with st.expander("🧩 SHAP raw values", expanded=True):
+                tab_shap1, tab_shap2 = st.tabs(["📄 SHAP Values", "📊 Visualizations"])
+
+                with tab_shap1:
+                    explainer = ShapExplainer(model)
+                    visualizer = ShapVisualizer()
+                    with st.spinner("Calculating SHAP values..."):
+                        shap_values = explainer.generate_shap_values(data)
+                        
+                        st.markdown("### Raw SHAP Values")
                         shap_df = pd.DataFrame(
                             shap_values[0] if len(shap_values.shape) == 3 else shap_values,
                             columns=data.columns
                         )
                         st.dataframe(shap_df.head(), use_container_width=True)
 
-                # SHAP Visualizations (collapsed by default)
-                with st.expander("📊 SHAP visualizations", expanded=False):
-                    with st.spinner("Generating visualizations..."):
-                        plots = visualizer.create_all_plots(shap_values, data)
-                        
-                        # Display summary plot
-                        if 'summary' in plots:
-                            st.pyplot(plots['summary'])
-                            plt.close(plots['summary'])
+                with tab_shap2:
+                    if 'shap_values' in locals():
+                        with st.spinner("Generating visualizations..."):
+                            plots = visualizer.create_all_plots(shap_values, data)
+                            if 'summary' in plots:
+                                st.markdown("### Summary Plot")
+                                st.pyplot(plots['summary'])
+                                plt.close(plots['summary'])
+                            
+                            if 'bar' in plots:
+                                st.markdown("### Bar Plot")
+                                st.pyplot(plots['bar'])
+                                plt.close(plots['bar'])
+                            
+                            if 'beeswarm' in plots:
+                                st.markdown("### Beeswarm Plot")
+                                st.pyplot(plots['beeswarm'])
+                                plt.close(plots['beeswarm'])
+                    else:
+                        st.warning("Please calculate SHAP values first in the 'SHAP Values' tab")
+
+                # Feature importance table and graph
+                st.header("📊 Feature Importance")
+                tab1, tab2 = st.tabs(["📋 Table View", "📈 Graph View"])
+
+                with tab1:
+                    with st.spinner("Calculating feature importance..."):
+                        mean_shap = np.abs(shap_values).mean(axis=0)
+                        if len(mean_shap.shape) > 1:
+                            mean_shap = mean_shap.mean(axis=0)
+                        importance_df = pd.DataFrame({
+                            'Feature': data.columns,
+                            'Importance': mean_shap
+                        }).sort_values('Importance', ascending=False).head(5)
+                    st.dataframe(
+                        importance_df.style.format({'Importance': '{:.4f}'}).hide(axis='index'),
+                        use_container_width=True
+                    )
+                with tab2:
+                    if 'importance' in plots:
+                        fig = plots['importance']
+                        fig.set_size_inches(6, 3.5)
+                        st.pyplot(fig, use_container_width=True)
+                        plt.close(fig)
 
                 # Generate explanation
                 st.header("🧠 Model Insights")
@@ -148,32 +184,6 @@ def main():
                         data_shape=data.shape
                     )
                     st.markdown(explanation)
-
-                st.header("📊 Feature Importance")
-                col1, col2 = st.columns([1, 2])
-
-                with col1:
-                    with st.spinner("Calculating feature importance..."):
-                        mean_shap = np.abs(shap_values).mean(axis=0)
-                        if len(mean_shap.shape) > 1:
-                            mean_shap = mean_shap.mean(axis=0)
-                        importance_df = pd.DataFrame({
-                            'Feature': data.columns,
-                            'Importance': mean_shap
-                        }).sort_values('Importance', ascending=False).head(5)
-                        
-                        st.dataframe(
-                            importance_df.style.format({'Importance': '{:.4f}'}),
-                            use_container_width=True
-                        )
-
-                with col2:
-                    # Use the importance plot from visualizer
-                    if 'importance' in plots:
-                        fig = plots['importance']
-                        fig.set_size_inches(6, 3.5)
-                        st.pyplot(fig, use_container_width=True)
-                        plt.close(fig)
 
             except Exception as e:
                 st.error(f"❌ Error: {str(e)}")
