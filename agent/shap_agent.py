@@ -9,7 +9,7 @@ class ShapAgent:
     def __init__(self):
         self.provider = os.getenv("AGENT_PROVIDER", "ollama")
         self.model = os.getenv("OLLAMA_MODEL", "mistral")
-        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "120"))  # Increased to 120 seconds
+        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "200"))
         self.base_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
     @staticmethod
@@ -49,14 +49,14 @@ SHAP Summary:
                 },
                 timeout=self.timeout
             )
-            
+
             # Handle the response format you were using successfully
             if response.status_code == 200:
                 result = response.json()
                 return result.get("response", "⚠️ Error: No response from Ollama.")
             else:
                 return f"⚠️ Ollama API error: {response.text}"
-                
+
         except requests.exceptions.Timeout:
             return (
                 "⚠️ Ollama timeout - The model might still be loading.\n"

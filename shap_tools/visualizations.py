@@ -21,11 +21,11 @@ class ShapVisualizer:
         }
         
         return figures
-    
+
     @staticmethod
     def _create_summary_plot(shap_values, data, feature_names):
         """Create beeswarm summary plot"""
-        fig, _ = plt.subplots(figsize=(10, 6))
+        fig, _ = plt.subplots(figsize=(4, 4))
         shap.summary_plot(
             shap_values, 
             features=data,
@@ -34,7 +34,7 @@ class ShapVisualizer:
         )
         plt.tight_layout()
         return fig
-    
+
     @staticmethod
     def _create_dependence_plots(shap_values, data, feature_names, n_plots=3):
         """Create dependence plots for top features"""
@@ -50,11 +50,11 @@ class ShapVisualizer:
             )
             plots.append(fig)
         return plots
-    
+
     @staticmethod
     def _create_importance_plot(shap_values, data, feature_names):
         """Create feature importance bar plot"""
-        fig, _ = plt.subplots(figsize=(10, 6))
+        fig, _ = plt.subplots(figsize=(6, 3.5))
         shap.summary_plot(
             shap_values,
             features=data,

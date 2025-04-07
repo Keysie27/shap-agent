@@ -7,23 +7,23 @@ class ShapPrompts:
         """Generate the LLM prompt based on SHAP results with actual feature names"""
         # Calculate mean absolute SHAP importance
         mean_shap = np.abs(shap_values).mean(axis=0)
-        
+
         # If multidimensional (multiclass classification), average across classes
         if len(mean_shap.shape) > 1:
             mean_shap = mean_shap.mean(axis=0)
-        
+
         # Create dataframe with actual feature names
         importance_df = pd.DataFrame({
             'Feature': data.columns,
             'Importance': mean_shap
         }).sort_values('Importance', ascending=False).head(top_n)
-        
+
         # Format feature information
         feature_info = "\n".join(
             f"- {row['Feature']}: {row['Importance']:.4f}" 
             for _, row in importance_df.iterrows()
         )
-        
+
         return f"""
 You are a data science expert explaining machine learning model behavior to business stakeholders.
 
@@ -36,7 +36,7 @@ Top {top_n} Most Important Features:
 **Please provide a model explanation following this exact structure:**
 
 **1. One-Sentence Summary**  
-Start with: "The {model_name} model is primarily influenced by: [top 3 features]."
+Start with: "The **{model_name}** model is primarily influenced by: [top 3 features]."
 
 **2. Top Feature Analysis**  
 For each of the top 3 features:
@@ -52,11 +52,11 @@ For each of the top 3 features:
 
 **4. Practical Recommendations**  
 Provide 5 specific, actionable suggestions:
-    1. [Recommendation related to top feature]
-    2. [Recommendation about data collection]
-    3. [Recommendation about model monitoring]
-    4. [Recommendation about business process]
-    5. [Recommendation about further analysis]
+    • [Recommendation related to top feature]
+    • [Recommendation about data collection]
+    • [Recommendation about model monitoring]
+    • [Recommendation about business process]
+    • [Recommendation about further analysis]
 
 **Formatting Requirements:**
 - Always use bullet points (•) for lists
