@@ -44,8 +44,8 @@ def main():
     # Sidebar info
     st.sidebar.markdown("""
     ### ℹ️ Instructions:
-    1. Select a pre-trained model.
-    2. Upload your dataset.
+    1. Select a pre-trained model
+    2. Upload your dataset
     3. Click the "Analyze" button
 
     ### 📌 Notes:
@@ -55,7 +55,6 @@ def main():
     ### 📊 Visualizations Guide:
     - **Feature Importance**: Shows which features matter most
     - **Impact Distribution**: Reveals how features affect predictions
-    - **Dependence Plots**: Show relationships for top features
     """)
 
     # Check Ollama status
