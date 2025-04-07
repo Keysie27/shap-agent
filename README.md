@@ -82,33 +82,38 @@ shap-agent/
 │
 ├── agent/
 │   └── shap_agent.py                 # GPT-based explanation logic
-│
+|   └── prompts.py                    # Rules of responses for the agent
+|
+├── shap_tools/
+│   └── explainer.py                 # Generates shap values for each ML model
+|   └── visualizations.py            # To handle shap visualizations
+|
 ├── app/
 │   ├── __init__.py                  # Marks app as a Python package
 │   ├── main.py                      # Streamlit interface (UI entrypoint)
 │   └── file_handler.py              # Handles uploaded files (models & CSV)
 │
 ├── data/
-│   ├── input_data/                  # User-uploaded datasets (.csv)
+│   ├── input_data/                 # User-uploaded datasets (.csv)
 │   └── sample_data/                # Sample datasets for testing the app
 │       ├── logistic_regression.csv
 │       ├── random_forest.csv
 │       └── xgboost.csv
-│
-├── input_models/                   # User-uploaded models (.pkl or .joblib)
-│
-├── sample_models/                  # Pretrained models for demo/testing
-│   ├── logistic_regression.pkl
-│   ├── random_forest.pkl
-│   └── xgboost.pkl
-│
+|── models/
+│   ├── input_models/                   # User-uploaded models (.plk) -> TO BE DEFINED
+|   ├── sample_models/                  # Pretrained models for demo/testing
+|         ├── logistic_regression.pkl
+│         ├── random_forest.pkl
+│         └── xgboost.pkl
+|
 ├── tests/
 │   ├── test_agent.py               # Unit tests for GPT logic
 │   ├── test_file_handler.py        # Tests for file loading
 │   └── test_shap_explainer.py      # Tests for SHAP explanations
 │
 ├── utils/
-│   └── shap_explainer.py           # SHAP logic (creates summaries per model type)
+│   └── generate_sample_models.py   # Generates default ML models and data for testing
+|   └── inspect_sample_models.py    # Validates default created ML models
 │
 ├── .env                            # OpenAI API key and other env variables
 ├── .gitignore                      # Ignore venv, .env, models, data, etc.
