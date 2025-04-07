@@ -35,8 +35,7 @@ Top {top_n} Most Important Features:
 
 **Please provide a model explanation following this exact structure:**
 
-**1. One-Sentence Summary**  
-Start with: "The **{model_name}** model is primarily influenced by: [top 3 features]."
+**1. "The **{model_name}** model is primarily influenced by: [top 3 features]."
 
 **2. Top Feature Analysis**  
 For each of the top 3 features:
