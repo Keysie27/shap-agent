@@ -25,7 +25,7 @@ class ShapVisualizer:
     @staticmethod
     def _create_summary_plot(shap_values, data, feature_names):
         """Create beeswarm summary plot"""
-        fig, _ = plt.subplots(figsize=(4, 4))
+        fig, _ = plt.subplots(figsize=(3, 2))
         shap.summary_plot(
             shap_values, 
             features=data,
@@ -40,7 +40,7 @@ class ShapVisualizer:
         """Create dependence plots for top features"""
         plots = []
         for i in range(min(n_plots, shap_values.shape[1])):
-            fig, _ = plt.subplots(figsize=(8, 5))
+            fig, _ = plt.subplots(figsize=(3, 2))
             shap.dependence_plot(
                 i,
                 shap_values,
@@ -54,7 +54,7 @@ class ShapVisualizer:
     @staticmethod
     def _create_importance_plot(shap_values, data, feature_names):
         """Create feature importance bar plot"""
-        fig, _ = plt.subplots(figsize=(6, 3.5))
+        fig, _ = plt.subplots(figsize=(3, 2))
         shap.summary_plot(
             shap_values,
             features=data,

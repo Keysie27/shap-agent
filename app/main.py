@@ -104,12 +104,15 @@ def main():
                     data = load_dataset(data_file)
                     
                     st.success(f"✅ Model loaded: {selected_display_name}")
+                    st.markdown("""
+                                Data preview:
+                                """)
                     st.dataframe(data.head(), use_container_width=True)
                     st.success(f"✅ Dataset loaded. Shape: {data.shape}")
 
                 # SHAP Analysis
                 st.header("🔍 SHAP Analysis")
-                tab_shap1, tab_shap2 = st.tabs(["📄 SHAP Values", "📊 Visualizations"])
+                tab_shap1, tab_shap2 = st.tabs(["📄 SHAP Values", "📊 Graph view"])
 
                 with tab_shap1:
                     explainer = ShapExplainer(model)
@@ -117,7 +120,7 @@ def main():
                     with st.spinner("Calculating SHAP values..."):
                         shap_values = explainer.generate_shap_values(data)
                         
-                        st.markdown("### Raw SHAP Values")
+                        st.markdown("### Raw SHAP Values preview:")
                         shap_df = pd.DataFrame(
                             shap_values[0] if len(shap_values.shape) == 3 else shap_values,
                             columns=data.columns
@@ -147,8 +150,7 @@ def main():
 
                 # Feature importance table and graph
                 st.header("📊 Feature Importance")
-                tab1, tab2 = st.tabs(["📋 Table View", "📈 Graph View"])
-
+                tab1, tab2 = st.tabs(["📄 Feature details", "📊 Graph view"])
                 with tab1:
                     with st.spinner("Calculating feature importance..."):
                         mean_shap = np.abs(shap_values).mean(axis=0)
@@ -160,12 +162,13 @@ def main():
                         }).sort_values('Importance', ascending=False).head(5)
                     st.dataframe(
                         importance_df.style.format({'Importance': '{:.4f}'}).hide(axis='index'),
-                        use_container_width=True
+                        use_container_width=True,
+                        hide_index=True
                     )
                 with tab2:
                     if 'importance' in plots:
                         fig = plots['importance']
-                        fig.set_size_inches(6, 3.5)
+                        fig.set_size_inches(10, 6)
                         st.pyplot(fig, use_container_width=True)
                         plt.close(fig)
 
