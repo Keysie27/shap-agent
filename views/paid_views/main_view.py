@@ -13,10 +13,34 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+pdf_bytes = None
+
 def main_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
     
+    if 'pdf_bytes' not in st.session_state:
+        st.session_state.pdf_bytes = None
+    
+    #'''
+    st.markdown("""
+    <style>
+    /* Hide the toolbar (hamburger + status) */
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
 
+    /* Optional: Also hide the header if it reappears */
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    /* Reclaim vertical space */
+    .main .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+""", unsafe_allow_html=True)#'''
+    
     ##render each individual component
     
     # Sidebar toggle button
@@ -37,6 +61,7 @@ def main_view():
     if model_name and data_file:
         col1, col2, col3 = st.columns([1, 2, 1])
         with col2:
+            st.markdown('<span id="button-after2"></span>', unsafe_allow_html=True)
             analyze_button = st.button("✨ Analyze model with AI ✨", use_container_width=True)
 
         if analyze_button:
@@ -44,37 +69,32 @@ def main_view():
 
 # Helper Methods 
 
-def _render_toggle_button():
-    if 'sidebar_mode' not in st.session_state:
-        st.session_state.sidebar_mode = 'Instructions'
-
-    st.markdown("""
-    <div class="toggle-btn-container">
-    """, unsafe_allow_html=True)
-
-    toggle = st.button("🔄", key="toggle_sidebar")
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    if toggle:
-        st.session_state.sidebar_mode = (
-            'About' if st.session_state.sidebar_mode == 'Instructions' else 'Instructions'
-        )
-
 def _set_custom_css():
-    st.markdown("""<style>
-        div.stButton > button:first-child {
-            background: linear-gradient(135deg, #9c27b0, #673ab7);
-            color: white; border: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: all 0.3s ease; font-weight: bold;
-        }
-        div.stButton > button:first-child:hover {
-            background: linear-gradient(135deg, #7b1fa2, #5e35b1);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-    </style>""", unsafe_allow_html=True)
+    with open("assets/styles/styles.css") as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+def _render_toggle_button():
+    st.markdown('<span id="button-after1"></span>', unsafe_allow_html=True)
+    if st.button("☰"):
+        st.session_state.sidebar_mode = (
+        'About' if st.session_state.sidebar_mode == 'Instructions' else 'Instructions'
+    )
+    
+def _render_download_button():
+    pdf_data = st.session_state.get('pdf_bytes')
+    if pdf_data:
+        st.markdown('<span id="button-after3"></span>', unsafe_allow_html=True)
+        st.download_button(
+            label="📥",
+            data=pdf_data,
+            file_name="shap_report.pdf",
+            mime="application/pdf",
+            key="download_pdf_icon"
+        )
+    else:
+        st.warning("PDF not available yet.")
+    
+
 
 def _render_header():
     st.title("🤖 SHAP-Agent: Model Explanation")
@@ -225,15 +245,10 @@ def _run_analysis(model_name, data_file):
         )
         
         with open(output_pdf_path, "rb") as f:
-            pdf_bytes = f.read()
-
-        #pdf download button
-        st.download_button(
-            label="Download PDF",
-            data=pdf_bytes,
-            file_name="shap_report.pdf",
-            mime="application/pdf"
-        )
+            st.session_state.pdf_bytes = f.read()
+        
+        # Pdf download button
+        _render_download_button()
         
     except Exception as e:
         st.error(f"❌ Error: {str(e)}")
