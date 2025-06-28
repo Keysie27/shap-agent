@@ -249,21 +249,52 @@ def _run_analysis(model_name, data_file):
         except Exception as e:
             st.error("❌ Failed to generate AI explanation.")
             raise e
-
-        # PDF Generation
+        # Parse explanation and generate PDF
         try:
+            # Try parsing the explanation into expected sections
             sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
-            cleaned_data = [section.replace('*', '').replace('\n', '') for section in sections]
+            cleaned_data = [section.replace('*', '').replace('\n', '').strip() for section in sections]
 
-            summary = cleaned_data[1].strip('"')
-            top_feature_analysis = re.split(r"- (?=Feature Name)", cleaned_data[2].strip())[1:]
-            top_feature_analysis = [item.strip() for item in top_feature_analysis]
-            key_observations = [part.strip() for part in cleaned_data[3].replace('Key Observations', '').split('- ') if part.strip()]
-            practical_recommendations = [part.strip() for part in cleaned_data[4].replace('Practical Recommendations', '').split('- ') if part.strip()]
+            summary = ""
+            top_feature_analysis = []
+            key_observations = []
+            practical_recommendations = []
+
+            if len(cleaned_data) >= 2:
+                summary = cleaned_data[1].strip('"')
+            else:
+                summary = "No summary available."
+
+            if len(cleaned_data) >= 3:
+                top_feature_analysis = [
+                    item.strip()
+                    for item in re.split(r"- (?=Feature Name|\*\*|[\w])", cleaned_data[2].strip())
+                    if item.strip()
+                ]
+            else:
+                top_feature_analysis = ["No feature analysis provided."]
+
+            if len(cleaned_data) >= 4:
+                key_observations = [
+                    part.strip()
+                    for part in cleaned_data[3].replace('Key Observations', '').split('- ')
+                    if part.strip()
+                ]
+            else:
+                key_observations = ["No key observations provided."]
+
+            if len(cleaned_data) >= 5:
+                practical_recommendations = [
+                    part.strip()
+                    for part in cleaned_data[4].replace('Practical Recommendations', '').split('- ')
+                    if part.strip()
+                ]
+            else:
+                practical_recommendations = ["No practical recommendations provided."]
 
             output_pdf_path = "output/shap_report.pdf"
             create_shap_report_pdf(
-                output_pdf_path,
+                output_path=output_pdf_path,
                 shap_summary_img_base64=shap_summary_img_base64,
                 bar_chart_img_base64=bar_chart_img_base64,
                 top_influencers_sentence=summary,
@@ -279,7 +310,7 @@ def _run_analysis(model_name, data_file):
 
         except Exception as e:
             st.error("❌ Failed to generate PDF report.")
-            raise e
+            st.exception(e)
 
     except Exception as e:
         st.error(f"❌ General Error: {str(e)}")
