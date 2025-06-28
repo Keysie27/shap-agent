@@ -65,6 +65,7 @@ def _render_sidebar():
     2. Upload your dataset
     3. Click the "Analyze" button
     ---
+    ### 📋 Dataset Requirements:
     - Dataset should contain only features (no target column)
     - Non-numeric columns auto-converted
     ---

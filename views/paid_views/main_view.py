@@ -40,9 +40,9 @@ def main_view():
     }
     </style>
 """, unsafe_allow_html=True)#'''
-    
+
     ##render each individual component
-    
+
     # Sidebar toggle button
     _render_toggle_button()
 
@@ -93,8 +93,6 @@ def _render_download_button():
         )
     else:
         st.warning("PDF not available yet.")
-    
-
 
 def _render_header():
     st.title("🤖 SHAP-Agent: Model Explanation")
@@ -115,6 +113,7 @@ def _render_sidebar():
             2. Upload your dataset
             3. Click the "Analyze" button
             ---
+            ### 📋 Dataset Requirements:
             - Dataset should contain only features (no target column)
             - Non-numeric columns auto-converted
             ---
