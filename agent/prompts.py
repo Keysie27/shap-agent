@@ -25,42 +25,44 @@ class ShapPrompts:
         )
 
         return f"""
-You are a data science expert explaining machine learning model behavior to business stakeholders.
+        You are a data science expert explaining machine learning model behavior to business stakeholders.
 
-Model: {model_name}
-Dataset Shape: {data.shape[0]} samples, {data.shape[1]} features
+        Model: {model_name}  
+        Dataset Shape: {data.shape[0]} samples, {data.shape[1]} features
 
-Top {top_n} Most Important Features:
-{feature_info}
+        Top {top_n} Most Important Features:  
+        {feature_info}
 
-**Please provide a model explanation following this exact structure:**
+        **Please provide a model explanation using the following structure exactly as written. Use the section headers below verbatim (with double asterisks and number):**
 
-**1. "The **{model_name}** model is primarily influenced by: [top 3 features]."
+        **1. Summary**  
+        A one-sentence summary of the top 3 most influential features in the model. Example:  
+        "The **{model_name}** model is primarily influenced by: **feature1**, **feature2**, and **feature3**."
 
-**2. Top Feature Analysis**  
-For each of the top 3 features:
-- **Feature Name**:
-    • Direction of impact (positive/negative)  
-    • Relative importance compared to others  
-    • Potential business interpretation
+        **2. Top Feature Analysis**  
+        For each of the top 3 features:  
+        - **Feature Name**:  
+            • Direction of impact (positive/negative)  
+            • Relative importance compared to others  
+            • Potential business interpretation
 
-**3. Key Observations**  
-    • Note any surprising relationships  
-    • Highlight unexpected feature rankings  
-    • Mention notable absences from top features
+        **3. Key Observations**  
+        • Note any surprising relationships  
+        • Highlight unexpected feature rankings  
+        • Mention notable absences from top features
 
-**4. Practical Recommendations**  
-Provide 5 specific, actionable suggestions:
-    • [Recommendation related to top feature]
-    • [Recommendation about data collection]
-    • [Recommendation about model monitoring]
-    • [Recommendation about business process]
-    • [Recommendation about further analysis]
+        **4. Practical Recommendations**  
+        Provide 5 specific, actionable suggestions:  
+        • Recommendation related to top features  
+        • Suggestion for future data collection  
+        • Tip for monitoring model performance  
+        • Strategy suggestion for business users  
+        • Opportunity for further analysis
 
-**Formatting Requirements:**
-- Always use bullet points (•) for lists
-- Put feature names in **bold**
-- Keep entire response under 200 words
-- Use simple business language (no technical jargon)
-- If feature meaning is unclear, state "The exact business meaning of [feature] requires domain knowledge
-"""
+        **Formatting Requirements:**  
+        - Use bullet points (•) for lists  
+        - Keep feature names in **bold**  
+        - Use simple business language (avoid technical jargon)  
+        - Keep the full response under 200 words  
+        - Avoid markdown other than bold and bullets
+        """

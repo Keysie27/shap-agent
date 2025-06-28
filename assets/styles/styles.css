@@ -1,0 +1,49 @@
+.element-container:has(#button-after1)+div button {
+    position: fixed;
+    top: 15px;
+    left: 270px;
+    color: white;
+    background-color: #0F1117;
+    border: 2px solid gray;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+
+}
+
+.element-container:has(#button-after1)+div button:hover {
+    background: #0C0D12;
+    transform: translateY(-2px);
+}
+
+
+.element-container:has(#button-after2)+div button {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    color: white;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.element-container:has(#button-after2)+div button:hover {
+    background: linear-gradient(135deg, #7b1fa2, #5e35b1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.element-container:has(#button-after3)+div button {
+    position: fixed;
+    top: 70px;
+    left: 270px;
+    color: white;
+    background-color: #0F1117;
+    border: 2px solid gray;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+
+}
+
+.element-container:has(#button-after3)+div button:hover {
+    background: #0C0D12;
+    transform: translateY(-2px);
+}
