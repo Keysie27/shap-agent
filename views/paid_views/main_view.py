@@ -149,113 +149,142 @@ def _model_and_data_selection():
 
 def _run_analysis(model_name, data_file):
     shap_summary_img_base64 = None
+    bar_chart_img_base64 = None
+
     try:
-        # Load resources
         with st.spinner("Loading model and data..."):
-            model_path = os.path.join("models", "sample_models", model_name)
-            model = joblib.load(model_path)
-            data = load_dataset(data_file)
-            st.success(f"✅ Model loaded: {model_name}")
-            st.dataframe(data.head(), use_container_width=True)
-            st.success(f"✅ Dataset loaded. Shape: {data.shape}")
+            try:
+                model_path = os.path.join("models", "sample_models", model_name)
+                model = joblib.load(model_path)
+                st.success(f"✅ Model loaded: {model_name}")
+            except Exception as e:
+                st.error("❌ Failed to load model.")
+                raise e
+
+            try:
+                data = load_dataset(data_file)
+                st.dataframe(data.head(), use_container_width=True)
+                st.success(f"✅ Dataset loaded. Shape: {data.shape}")
+            except Exception as e:
+                st.error("❌ Failed to load dataset.")
+                raise e
 
         # SHAP Analysis
         st.header("🔍 SHAP Analysis")
         tab_shap1, tab_shap2 = st.tabs(["📄 SHAP Values", "📊 Graph view"])
-        explainer = ShapExplainer(model)
-        visualizer = ShapVisualizer()
+        try:
+            explainer = ShapExplainer(model)
+            visualizer = ShapVisualizer()
+        except Exception as e:
+            st.error("❌ Failed to initialize SHAP tools.")
+            raise e
 
         with tab_shap1:
-            with st.spinner("Calculating SHAP values..."):
-                shap_values = explainer.generate_shap_values(data)
-                shap_df = pd.DataFrame(
-                    shap_values[0] if len(shap_values.shape) == 3 else shap_values,
-                    columns=data.columns
-                )
-                st.dataframe(shap_df.head(), use_container_width=True)
+            try:
+                with st.spinner("Calculating SHAP values..."):
+                    shap_values = explainer.generate_shap_values(data)
+                    shap_df = pd.DataFrame(
+                        shap_values[0] if len(shap_values.shape) == 3 else shap_values,
+                        columns=data.columns
+                    )
+                    st.dataframe(shap_df.head(), use_container_width=True)
+            except Exception as e:
+                st.error("❌ Failed to compute SHAP values.")
+                raise e
 
         with tab_shap2:
-            with st.spinner("Generating visualizations..."):
-                plots = visualizer.create_all_plots(shap_values, data)
-                summary_fig = plots.get('summary')
-                shap_summary_img_base64 = get_img_base_64(summary_fig)
-                
-                for name in ['summary', 'bar', 'beeswarm']:
-                    if name in plots:
-                        st.markdown(f"### {name.capitalize()} Plot")
-                        st.pyplot(plots[name])
-                        plt.close(plots[name])
+            try:
+                with st.spinner("Generating visualizations..."):
+                    plots = visualizer.create_all_plots(shap_values, data)
+                    summary_fig = plots.get('summary')
+                    shap_summary_img_base64 = get_img_base_64(summary_fig)
+
+                    for name in ['summary', 'bar', 'beeswarm']:
+                        if name in plots:
+                            st.markdown(f"### {name.capitalize()} Plot")
+                            st.pyplot(plots[name])
+                            plt.close(plots[name])
+            except Exception as e:
+                st.error("❌ Failed to generate SHAP plots.")
+                raise e
 
         # Feature Importance
         st.header("📊 Feature Importance")
         tab1, tab2 = st.tabs(["📄 Feature details", "📊 Graph view"])
-        with tab1:
-            mean_shap = np.abs(shap_values).mean(axis=0)
-            if len(mean_shap.shape) > 1:
-                mean_shap = mean_shap.mean(axis=0)
-            importance_df = pd.DataFrame({
-                'Feature': data.columns,
-                'Importance': mean_shap
-            }).sort_values('Importance', ascending=False).head(5)
-            st.dataframe(importance_df.style.format({'Importance': '{:.4f}'}).hide(axis='index'), use_container_width=True)
+        try:
+            with tab1:
+                mean_shap = np.abs(shap_values).mean(axis=0)
+                if len(mean_shap.shape) > 1:
+                    mean_shap = mean_shap.mean(axis=0)
+                importance_df = pd.DataFrame({
+                    'Feature': data.columns,
+                    'Importance': mean_shap
+                }).sort_values('Importance', ascending=False).head(5)
+                st.dataframe(importance_df.style.format({'Importance': '{:.4f}'}).hide(axis='index'), use_container_width=True)
+        except Exception as e:
+            st.error("❌ Failed to compute feature importance.")
+            raise e
 
-        with tab2:
-            if 'importance' in plots:
-                fig = plots['importance']
-                summary_fig = plots.get('importance')
-                bar_chart_img_base64 = get_img_base_64(summary_fig)           
-                
-                fig.set_size_inches(10, 6)
-                st.pyplot(fig, use_container_width=True)
-                plt.close(fig)
+        try:
+            with tab2:
+                if 'importance' in plots:
+                    fig = plots['importance']
+                    summary_fig = plots.get('importance')
+                    bar_chart_img_base64 = get_img_base_64(summary_fig)           
+                    fig.set_size_inches(10, 6)
+                    st.pyplot(fig, use_container_width=True)
+                    plt.close(fig)
+        except Exception as e:
+            st.error("❌ Failed to render feature importance plot.")
+            raise e
 
         # Model Insights
         st.header("🧠 Model Insights")
-        agent = ShapAgent()
-        with st.spinner("Generating explanation..."):
-            prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, data)
-            explanation = agent.generate_explanation(prompt, data.shape)
-            st.markdown(explanation)
+        try:
+            agent = ShapAgent()
+            with st.spinner("Generating explanation..."):
+                prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, data)
+                explanation = agent.generate_explanation(prompt, data.shape)
+                st.markdown(explanation)
+        except Exception as e:
+            st.error("❌ Failed to generate AI explanation.")
+            raise e
 
-        # split model explanations into sections
-        sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
-        cleaned_data = [section.replace('*', '').replace('\n', '') for section in sections]
+        # PDF Generation
+        try:
+            sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
+            cleaned_data = [section.replace('*', '').replace('\n', '') for section in sections]
 
-        #process each section of text
-        summary = cleaned_data[1].strip('"')
+            summary = cleaned_data[1].strip('"')
+            top_feature_analysis = re.split(r"- (?=Feature Name)", cleaned_data[2].strip())[1:]
+            top_feature_analysis = [item.strip() for item in top_feature_analysis]
+            key_observations = [part.strip() for part in cleaned_data[3].replace('Key Observations', '').split('- ') if part.strip()]
+            practical_recommendations = [part.strip() for part in cleaned_data[4].replace('Practical Recommendations', '').split('- ') if part.strip()]
 
-        top_feature_analysis = re.split(r"- (?=Feature Name)", cleaned_data[2].strip())[1:]
-        top_feature_analysis = [item.strip() for item in top_feature_analysis]
+            output_pdf_path = "output/shap_report.pdf"
+            create_shap_report_pdf(
+                output_pdf_path,
+                shap_summary_img_base64=shap_summary_img_base64,
+                bar_chart_img_base64=bar_chart_img_base64,
+                top_influencers_sentence=summary,
+                feature_analysis_points=top_feature_analysis,
+                key_observations_points=key_observations,
+                practical_recommendations=practical_recommendations
+            )
 
-        key_observations = [part.strip() for part in cleaned_data[3].replace('Key Observations', '').split('- ') if part.strip()]
+            with open(output_pdf_path, "rb") as f:
+                st.session_state.pdf_bytes = f.read()
 
-        practical_recommendations = [part.strip() for part in cleaned_data[4].replace('Practical Recommendations', '').split('- ') if part.strip()]
+            _render_download_button()
 
-        #generate pdf
-        output_pdf_path = "output/shap_report.pdf"
-        create_shap_report_pdf(
-            output_pdf_path,
-            shap_summary_img_base64=shap_summary_img_base64,
-            bar_chart_img_base64=bar_chart_img_base64,
-            top_influencers_sentence=summary,
-            feature_analysis_points=top_feature_analysis,
-            key_observations_points=key_observations,
-            practical_recommendations=practical_recommendations
-        )
-
-        with open(output_pdf_path, "rb") as f:
-            st.session_state.pdf_bytes = f.read()
-
-        # Pdf download button
-        _render_download_button()
+        except Exception as e:
+            st.error("❌ Failed to generate PDF report.")
+            raise e
 
     except Exception as e:
-        st.error(f"❌ Error: {str(e)}")
+        st.error(f"❌ General Error: {str(e)}")
         st.error("""
         Troubleshooting:
-        1. Ensure Ollama is running (`ollama serve`)
-        2. Pull the model (`ollama pull mistral`)
-        3. Check CSV file format
-        4. Try with a smaller dataset
+        - Check dataset structure
+        - Try with a smaller dataset
         """)
-

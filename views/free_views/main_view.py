@@ -163,9 +163,7 @@ def _run_analysis(model_name, data_file):
         st.error(f"❌ Error: {str(e)}")
         st.error("""
         Troubleshooting:
-        1. Ensure Ollama is running (`ollama serve`)
-        2. Pull the model (`ollama pull mistral`)
-        3. Check CSV file format
-        4. Try with a smaller dataset
+        - Check dataset structure
+        - Try with a smaller dataset
         """)
 
