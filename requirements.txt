@@ -7,3 +7,4 @@ streamlit
 openai
 joblib
 python-dotenv
+reportlab
