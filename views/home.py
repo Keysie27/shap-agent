@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 
 pdf_bytes = None
 
-def main_view():
+def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
 
     if 'pdf_bytes' not in st.session_state:
