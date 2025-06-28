@@ -17,10 +17,10 @@ pdf_bytes = None
 
 def main_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
-    
+
     if 'pdf_bytes' not in st.session_state:
         st.session_state.pdf_bytes = None
-    
+
     #'''
     st.markdown("""
     <style>
@@ -217,21 +217,21 @@ def _run_analysis(model_name, data_file):
             prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, data)
             explanation = agent.generate_explanation(prompt, data.shape)
             st.markdown(explanation)
-            
+
         # split model explanations into sections
         sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
         cleaned_data = [section.replace('*', '').replace('\n', '') for section in sections]
-   
+
         #process each section of text
         summary = cleaned_data[1].strip('"')
-    
+
         top_feature_analysis = re.split(r"- (?=Feature Name)", cleaned_data[2].strip())[1:]
         top_feature_analysis = [item.strip() for item in top_feature_analysis]
 
         key_observations = [part.strip() for part in cleaned_data[3].replace('Key Observations', '').split('- ') if part.strip()]
-       
+
         practical_recommendations = [part.strip() for part in cleaned_data[4].replace('Practical Recommendations', '').split('- ') if part.strip()]
-       
+
         #generate pdf
         output_pdf_path = "output/shap_report.pdf"
         create_shap_report_pdf(
@@ -243,13 +243,13 @@ def _run_analysis(model_name, data_file):
             key_observations_points=key_observations,
             practical_recommendations=practical_recommendations
         )
-        
+
         with open(output_pdf_path, "rb") as f:
             st.session_state.pdf_bytes = f.read()
-        
+
         # Pdf download button
         _render_download_button()
-        
+
     except Exception as e:
         st.error(f"❌ Error: {str(e)}")
         st.error("""

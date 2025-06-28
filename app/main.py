@@ -6,9 +6,8 @@ from services.pdf_generator import create_shap_report_pdf
 def main():
     import warnings
     warnings.filterwarnings("ignore")
-    
+
     main_view()
-    
-        
+
 if __name__ == "__main__":
     main()
