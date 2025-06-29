@@ -211,33 +211,33 @@ def _run_analysis(model_name, data_file):
                 raise e
 
         # Feature Importance
-        st.header("📊 Feature Importance")
+        st.header("📊 Feature Impact")
         tab1, tab2 = st.tabs(["📄 Feature details", "📊 Graph view"])
         try:
             with tab1:
                 mean_shap = np.abs(shap_values).mean(axis=0)
                 if len(mean_shap.shape) > 1:
                     mean_shap = mean_shap.mean(axis=0)
-                importance_df = pd.DataFrame({
+                impact_df = pd.DataFrame({
                     'Feature': data.columns,
-                    'Importance': mean_shap
-                }).sort_values('Importance', ascending=False).head(5)
-                st.dataframe(importance_df.style.format({'Importance': '{:.4f}'}).hide(axis='index'), use_container_width=True)
+                    'Impact': mean_shap
+                }).sort_values('Impact', ascending=False).head(5)
+                st.dataframe(impact_df.style.format({'Impact': '{:.4f}'}).hide(axis='index'), use_container_width=True)
         except Exception as e:
-            st.error("❌ Failed to compute feature importance.")
+            st.error("❌ Failed to compute feature impact.")
             raise e
 
         try:
             with tab2:
-                if 'importance' in plots:
-                    fig = plots['importance']
-                    summary_fig = plots.get('importance')
-                    bar_chart_img_base64 = get_img_base_64(summary_fig)           
+                if 'impact' in plots:
+                    fig = plots['impact']
+                    summary_fig = plots.get('impact')
+                    bar_chart_img_base64 = get_img_base_64(summary_fig)
                     fig.set_size_inches(10, 6)
                     st.pyplot(fig, use_container_width=True)
                     plt.close(fig)
         except Exception as e:
-            st.error("❌ Failed to render feature importance plot.")
+            st.error("❌ Failed to render feature impact plot.")
             raise e
 
         # Model Insights
