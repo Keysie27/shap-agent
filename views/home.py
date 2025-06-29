@@ -21,20 +21,18 @@ def home_view():
     if 'pdf_bytes' not in st.session_state:
         st.session_state.pdf_bytes = None
 
+    #hide dev toolbar
     #'''
     st.markdown("""
     <style>
-    /* Hide the toolbar (hamburger + status) */
     [data-testid="stToolbar"] {
         display: none !important;
     }
 
-    /* Optional: Also hide the header if it reappears */
     [data-testid="stHeader"] {
         display: none !important;
     }
 
-    /* Reclaim vertical space */
     .main .block-container {
         padding-top: 1rem;
     }
@@ -45,6 +43,8 @@ def home_view():
 
     # Sidebar toggle button
     _render_toggle_button()
+    
+    _render_download_button_disabled()
 
     _set_custom_css()
 
@@ -80,7 +80,12 @@ def _render_toggle_button():
         'About' if st.session_state.sidebar_mode == 'Instructions' else 'Instructions'
     )
     
-def _render_download_button():
+def _render_download_button_disabled():
+    st.markdown('<span id="button-after4"></span>', unsafe_allow_html=True)
+    if st.button("📥"):
+        print("not ready yet")
+        
+def _render_download_button_enabled():
     pdf_data = st.session_state.get('pdf_bytes')
     if pdf_data:
         st.markdown('<span id="button-after3"></span>', unsafe_allow_html=True)
@@ -89,10 +94,7 @@ def _render_download_button():
             data=pdf_data,
             file_name="shap_report.pdf",
             mime="application/pdf",
-            key="download_pdf_icon"
         )
-    else:
-        st.warning("PDF not available yet.")
 
 def _render_header():
     st.title("🤖 SHAP-Agent: Model Explanation")
@@ -292,9 +294,7 @@ def _run_analysis(model_name, data_file):
             else:
                 practical_recommendations = ["No practical recommendations provided."]
 
-            output_pdf_path = "output/shap_report.pdf"
-            create_shap_report_pdf(
-                output_path=output_pdf_path,
+            st.session_state.pdf_bytes = create_shap_report_pdf(
                 shap_summary_img_base64=shap_summary_img_base64,
                 bar_chart_img_base64=bar_chart_img_base64,
                 top_influencers_sentence=summary,
@@ -302,11 +302,9 @@ def _run_analysis(model_name, data_file):
                 key_observations_points=key_observations,
                 practical_recommendations=practical_recommendations
             )
-
-            with open(output_pdf_path, "rb") as f:
-                st.session_state.pdf_bytes = f.read()
-
-            _render_download_button()
+            
+            #activate download button 
+            _render_download_button_enabled()
 
         except Exception as e:
             st.error("❌ Failed to generate PDF report.")

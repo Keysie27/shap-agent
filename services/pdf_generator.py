@@ -14,7 +14,6 @@ def decode_base64_image(base64_string):
     return io.BytesIO(img_data)
 
 def create_shap_report_pdf(
-    output_path,
     title="SHAP-Agent Report",
     shap_summary_img_base64=None,
     bar_chart_img_base64=None,
@@ -23,9 +22,9 @@ def create_shap_report_pdf(
     key_observations_points=[],
     practical_recommendations=[],
 ):
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    buffer = BytesIO()
     
-    doc = SimpleDocTemplate(output_path, pagesize=letter,
+    doc = SimpleDocTemplate(buffer, pagesize=letter,
                             rightMargin=72, leftMargin=72,
                             topMargin=72, bottomMargin=72)
     
@@ -110,5 +109,7 @@ def create_shap_report_pdf(
     story.append(Spacer(1, 12))
     
     doc.build(story)
+    buffer.seek(0)
+    return buffer.getvalue()
     
 

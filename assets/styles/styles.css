@@ -47,3 +47,21 @@
     background: #0C0D12;
     transform: translateY(-2px);
 }
+
+.element-container:has(#button-after4)+div button {
+    position: fixed;
+    top: 70px;
+    left: 270px;
+    color: white;
+    background-color: #0F1117;
+    border: 2px solid gray;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+    opacity: 0.3;
+}
+
+.element-container:has(#button-after4)+div button:hover {
+    background: #0C0D12;
+    transform: translateY(-2px);
+}
