@@ -1,7 +1,7 @@
 import re
 import streamlit as st
 from agent.shap_agent import ShapAgent
-from services.helpers import get_img_base_64
+from services.helpers import clear_analysis_data, get_img_base_64
 from services.pdf_generator import create_shap_report_pdf
 from shap_tools.explainer import ShapExplainer
 from shap_tools.visualizations import ShapVisualizer
@@ -53,19 +53,13 @@ def home_view():
     _render_sidebar()
 
     _check_ollama()
-
+    
     # Model selection and data upload
     model_name, data_file = _model_and_data_selection()
-
-    # Analysis button & processing
-    if model_name and data_file:
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            st.markdown('<span id="button-after2"></span>', unsafe_allow_html=True)
-            analyze_button = st.button("✨ Analyze model with AI ✨", use_container_width=True)
-
-        if analyze_button:
-            _run_analysis(model_name, data_file)
+    
+    if 'analysis_started' in st.session_state:
+        _render_content(model_name, data_file)
+    
 
 # Helper Methods 
 
@@ -82,7 +76,7 @@ def _render_toggle_button():
     
 def _render_download_button_disabled():
     st.markdown('<span id="button-after4"></span>', unsafe_allow_html=True)
-    if st.button("📥"):
+    if st.button("📥", help="PDF not available"):
         print("not ready yet")
         
 def _render_download_button_enabled():
@@ -146,50 +140,111 @@ def _model_and_data_selection():
 
     st.subheader("2. Upload your data:")
     data_file = st.file_uploader("Choose a CSV file", type=["csv"], label_visibility="collapsed")
+    
+    # Analysis button & processing
+    if model_name and data_file:
+        col1, col2, col3 = st.columns([1, 2, 1])
+        with col2:
+            st.markdown('<span id="button-after2"></span>', unsafe_allow_html=True)
+            analyze_button = st.button("✨ Analyze model with AI ✨", use_container_width=True)
+
+        if analyze_button:
+            st.session_state.analysis_started = True
+            clear_analysis_data()
+            st.rerun()
 
     return model_name, data_file
 
-def _run_analysis(model_name, data_file):
+def _get_model(model_name):
+    #get loaded model
+    try:
+        model_path = os.path.join("models", "sample_models", model_name)
+        model = joblib.load(model_path)
+        st.session_state.model_name = model_name
+        st.session_state.model = model
+        st.rerun()
+    except Exception as e:
+        st.error("❌ Failed to load model.")
+        raise e
+        
+def _get_data(data_file):
+    #get loaded dataset
+    try:
+        data = load_dataset(data_file)
+        st.session_state.data = data
+        st.rerun()
+    except Exception as e:
+        st.error("❌ Failed to load dataset.")
+        raise e
+    
+def _get_shap():
+    #get shap analysis
+    model = st.session_state.model
+    data = st.session_state.data
+    
+    try:
+        explainer = ShapExplainer(model)
+        visualizer = ShapVisualizer()
+    except Exception as e:
+        st.error("❌ Failed to initialize SHAP tools.")
+        raise e
+        
+    #SHAP Analysis
+    shap_values = explainer.generate_shap_values(data)
+    st.session_state.shap_values = shap_values
+        
+    plots = visualizer.create_all_plots(shap_values, data)
+    summary_fig = plots.get('summary')
+    st.session_state.shap_summary_img_base64 = get_img_base_64(summary_fig)  
+    st.session_state.plots = plots
+    st.rerun()
+    
+def _get_explanation():
+    model_name = st.session_state.model_name
+    shap_values = st.session_state.shap_values
+    data = st.session_state.data
+    
+    agent = ShapAgent()
+    prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, data)
+    explanation = agent.generate_explanation(prompt, data.shape) 
+    st.session_state.explanation = explanation
+    st.rerun()
+
+def _render_content(model_name, data_file):
     shap_summary_img_base64 = None
     bar_chart_img_base64 = None
 
     try:
-        with st.spinner("Loading model and data..."):
-            try:
-                model_path = os.path.join("models", "sample_models", model_name)
-                model = joblib.load(model_path)
-                st.success(f"✅ Model loaded: {model_name}")
-            except Exception as e:
-                st.error("❌ Failed to load model.")
-                raise e
+        if 'model_name' not in st.session_state:
+            with st.spinner(""):
+                _get_model(model_name)
+        
+        st.success(f"✅ Model loaded: {st.session_state.model_name}")
+        
+        if 'data' not in st.session_state:
+            with st.spinner(""):
+                _get_data(data_file)
 
-            try:
-                data = load_dataset(data_file)
-                st.dataframe(data.head(), use_container_width=True)
-                st.success(f"✅ Dataset loaded. Shape: {data.shape}")
-            except Exception as e:
-                st.error("❌ Failed to load dataset.")
-                raise e
+        #display data        
+        data = st.session_state.data
+        st.dataframe(data.head(), use_container_width=True)
+        st.success(f"✅ Dataset loaded. Shape: {data.shape}")
 
+        if 'shap_values' not in st.session_state:
+            with st.spinner("Calculating SHAP values..."):
+                _get_shap()
+        
         # SHAP Analysis
         st.header("🔍 SHAP Analysis")
         tab_shap1, tab_shap2 = st.tabs(["📄 SHAP Values", "📊 Graph view"])
-        try:
-            explainer = ShapExplainer(model)
-            visualizer = ShapVisualizer()
-        except Exception as e:
-            st.error("❌ Failed to initialize SHAP tools.")
-            raise e
-
         with tab_shap1:
             try:
-                with st.spinner("Calculating SHAP values..."):
-                    shap_values = explainer.generate_shap_values(data)
-                    shap_df = pd.DataFrame(
-                        shap_values[0] if len(shap_values.shape) == 3 else shap_values,
-                        columns=data.columns
-                    )
-                    st.dataframe(shap_df.head(), use_container_width=True)
+                shap_values = st.session_state.shap_values
+                shap_df = pd.DataFrame(
+                    shap_values[0] if len(shap_values.shape) == 3 else shap_values,
+                    columns=data.columns
+                )
+                st.dataframe(shap_df.head(), use_container_width=True)
             except Exception as e:
                 st.error("❌ Failed to compute SHAP values.")
                 raise e
@@ -197,9 +252,7 @@ def _run_analysis(model_name, data_file):
         with tab_shap2:
             try:
                 with st.spinner("Generating visualizations..."):
-                    plots = visualizer.create_all_plots(shap_values, data)
-                    summary_fig = plots.get('summary')
-                    shap_summary_img_base64 = get_img_base_64(summary_fig)
+                    plots = st.session_state.plots
 
                     for name in ['summary', 'bar', 'beeswarm']:
                         if name in plots:
@@ -209,7 +262,7 @@ def _run_analysis(model_name, data_file):
             except Exception as e:
                 st.error("❌ Failed to generate SHAP plots.")
                 raise e
-
+            
         # Feature Importance
         st.header("📊 Feature Impact")
         tab1, tab2 = st.tabs(["📄 Feature details", "📊 Graph view"])
@@ -239,15 +292,16 @@ def _run_analysis(model_name, data_file):
         except Exception as e:
             st.error("❌ Failed to render feature impact plot.")
             raise e
-
+        
         # Model Insights
+        if 'explanation' not in st.session_state:
+            with st.spinner("Generating explanation..."):
+                _get_explanation()
+        
         st.header("🧠 Model Insights")
         try:
-            agent = ShapAgent()
-            with st.spinner("Generating explanation..."):
-                prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, data)
-                explanation = agent.generate_explanation(prompt, data.shape)
-                st.markdown(explanation)
+            explanation = st.session_state.explanation
+            st.markdown(explanation)
         except Exception as e:
             st.error("❌ Failed to generate AI explanation.")
             raise e
@@ -293,6 +347,9 @@ def _run_analysis(model_name, data_file):
                 ]
             else:
                 practical_recommendations = ["No practical recommendations provided."]
+                
+            if 'shap_summary_img_base64' in st.session_state:
+                shap_summary_img_base64 = st.session_state.shap_summary_img_base64
 
             st.session_state.pdf_bytes = create_shap_report_pdf(
                 shap_summary_img_base64=shap_summary_img_base64,
