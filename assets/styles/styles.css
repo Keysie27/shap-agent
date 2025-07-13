@@ -10,6 +10,10 @@
 
 }
 
+.stApp {
+    min-width: 1000px
+}
+
 .element-container:has(#button-after1)+div button:hover {
     background: #0C0D12;
     transform: translateY(-2px);
@@ -46,4 +50,230 @@
 .element-container:has(#button-after3)+div button:hover {
     background: #0C0D12;
     transform: translateY(-2px);
+}
+
+.element-container:has(#button-after4)+div button {
+    position: fixed;
+    top: 70px;
+    left: 270px;
+    color: white;
+    background-color: #0F1117;
+    border: 2px solid gray;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    filter: grayscale(100%);
+    opacity: 0.3;
+}
+
+.element-container:has(#button-after4)+div button:hover {
+    background: #0C0D12;
+    transform: translateY(-2px);
+}
+
+.element-container:has(#button-after5)+div button {
+    display: block;
+    margin: 0 auto;
+    margin-left: calc(50% - 335px);
+    margin-top: -100px;
+    color: white;
+    background-color: #181818;
+    border: none;
+    transition: all 0.3s ease;
+    height: 60px;
+    width: 280px;
+}
+
+.element-container:has(#button-after5)+div button:hover {
+    background: #565656;
+    transform: translateY(-2px);
+}
+
+.element-container:has(#button-after6)+div {
+    visibility: hidden;
+}
+
+.element-container:has(#button-after6)+div button {
+    display: block;
+    margin: 0 auto;
+    margin-left: calc(50% + 55px);
+    margin-top: -130px;
+    color: white;
+    background-color: #A693F5;
+    border: none;
+    transition: all 0.3s ease;
+    height: 60px;
+    width: 280px;
+    visibility: visible;
+}
+
+.element-container:has(#button-after6)+div button:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+    color: rgb(106, 75, 238);
+}
+
+.price-container1 {
+    background: #141414;
+    border-radius: 5px;
+    width: 320px;
+    height: 500px;
+}
+
+.price-container2 {
+    background: #5E44E6;
+    border-radius: 5px;
+    width: 320px;
+    height: 500px;
+}
+
+.price-title {
+    font-size: 24px !important;
+    padding-left: 20px;
+    padding-top: 20px;
+    margin-bottom: -5px
+}
+
+.price-cost {
+    font-size: 40px !important;
+    padding-left: 20px;
+}
+
+.price-line1 {
+    margin-left: 20px;
+    margin-right: 20px;
+    background: #717171;
+    width: auto;
+    height: 1.5px;
+    margin-bottom: 30px;
+}
+
+.price-line2 {
+    margin-left: 20px;
+    margin-right: 20px;
+    background: #A693F5;
+    width: auto;
+    height: 1.5px;
+    margin-bottom: 30px;
+}
+
+.price-list-div {
+    margin-left: 30px;
+    display: flex;
+    margin-bottom: 10px;
+}
+
+.price-star1 {
+    width: 23px;
+    height: 23px;
+    fill: #02C38F;
+    margin-top: 2px;
+}
+
+.price-star2 {
+    width: 23px;
+    height: 23px;
+    fill: #ffffff;
+    margin-top: 2px;
+}
+
+.price-text1 {
+    color: white;
+    padding-left: 10px;
+    font-size: 17px !important;
+}
+
+.price-text1 span {
+    color: #717171;
+}
+
+.price-text2 {
+    color: white;
+    padding-left: 10px;
+    font-size: 17px !important;
+}
+
+.price-text2 span {
+    color: #A693F5;
+}
+
+.price-root {
+    display: flex;
+    gap: 70px;
+    justify-content: center;
+}
+
+.price-cost span {
+    color: #A693F5;
+    font-size: 18px;
+}
+
+.price-header {
+    text-align: center;
+    margin-top: -50px;
+    margin-bottom: 50px;
+}
+
+.price-header p {
+    color: #6D6D6D;
+    margin-top: 0px;
+}
+
+[data-baseweb="checkbox"]>div:first-child {
+    background-color: #694BED !important;
+}
+
+[data-baseweb="checkbox"]>div:first-child {
+    width: 44px !important;
+    height: 26px !important;
+}
+
+[data-baseweb="checkbox"]>div:first-child>div {
+    height: 18px !important;
+    width: 18px !important;
+    margin: 2px !important;
+    margin-left: 3px !important;
+}
+
+.stCheckbox {
+    display: flex;
+    width: 100vw !important;
+    margin-left: -80px;
+    justify-content: center;
+    margin-top: -50px;
+    position: absolute;
+    min-width: 1000px;
+    padding-left: 0px;
+}
+
+.element-container:has(#div-after1)+div {
+    position: relative;
+    display: "flex";
+    margin-top: -80px;
+    visibility: hidden;
+    width: 100vw;
+    left: 0px;
+    margin-bottom: 40px;
+}
+
+.element-container:has(#div-after1)+div div {
+    font-weight: 600;
+    display: flex;
+    width: 300px;
+    font-size: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    visibility: hidden;
+}
+
+.toggle-label-1 {
+    width: 90px !important;
+    visibility: visible !important;
+    margin-right: 10px !important;
+    margin-left: 15px !important;
+}
+
+.toggle-label-2 {
+    width: 100px !important;
+    visibility: visible !important;
+    margin-left: 90px !important;
 }
