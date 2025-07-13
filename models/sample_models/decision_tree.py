@@ -1,6 +1,6 @@
 from sklearn.tree import DecisionTreeClassifier
 
-def train(X_train, y_train, max_depth=None, **kwargs):
+def train(X, y, max_depth=None, **kwargs):
     model = DecisionTreeClassifier(max_depth=max_depth, **kwargs)
-    model.fit(X_train, y_train)
+    model.fit(X, y)
     return model

@@ -1,0 +1,11 @@
+word_count,avg_word_length,num_exclamations,target
+12,4.5,0,ham
+5,6.1,2,spam
+20,3.8,0,ham
+7,5.2,1,spam
+15,4.0,0,ham
+6,6.0,3,spam
+25,3.7,0,ham
+8,5.4,1,spam
+10,4.2,0,ham
+9,5.5,2,spam

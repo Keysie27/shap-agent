@@ -1,6 +1,6 @@
 from sklearn.svm import SVC
 
-def train(X_train, y_train, kernel, C, **kwargs):
-    model = SVC(kernel=kernel, C=C, probability=True, **kwargs)
-    model.fit(X_train, y_train)
+def train(X, y, C=1.0, kernel='rbf', **kwargs):
+    model = SVC(C=C, kernel=kernel, probability=True, **kwargs)
+    model.fit(X, y)
     return model
