@@ -151,39 +151,46 @@ def _model_and_data_selection():
                     st.error(f"❌ Failed to train model: {e}")
 
 # ----------------------------
-# SHAP Analysis + Visuals
+# Main Content Sections
 # ----------------------------
 
 def _render_content():
-    try:
-        model = st.session_state.get("model")
-        model_name = st.session_state.get("model_name")
-        X = st.session_state.get("data")
-        y = st.session_state.get("target")
+    _render_model_info()
+    _render_shap_analysis()
+    _render_feature_impact()
+    _render_explanation_generation()
+    _render_pdf_generation()
 
-        if not all([model, model_name, X is not None, y is not None]):
-            st.error("❌ Missing model or data. Please re-upload your dataset and retrain.")
-            return
+def _render_model_info():
+    model = st.session_state.get("model")
+    model_name = st.session_state.get("model_name")
+    X = st.session_state.get("data")
+    y = st.session_state.get("target")
 
-        st.success(f"✅ Model loaded: {model_name}")
-        st.success(f"✅ Dataset loaded. Shape: {X.shape}")
-        st.dataframe(X.head(), use_container_width=True)
+    if model is None or model_name is None or X is None or y is None:
+        st.error("❌ Missing model or data. Please re-upload your dataset and retrain.")
+        return
 
-        if 'shap_values' not in st.session_state:
-            with st.spinner("Calculating SHAP values..."):
-                explainer = ShapExplainer(model)
-                shap_values = explainer.generate_shap_values(X)
-                st.session_state.shap_values = shap_values
+    st.success(f"✅ Model loaded: {model_name}")
+    st.success(f"✅ Dataset loaded. Shape: {X.shape}")
+    st.dataframe(X.head(), use_container_width=True)
 
-                visualizer = ShapVisualizer()
-                st.session_state.plots = visualizer.create_all_plots(shap_values, X)
-                st.session_state.shap_summary_img_base64 = get_img_base_64(st.session_state.plots['summary'])
+def _render_shap_analysis():
+    if st.button("📊 Run SHAP Analysis"):
+        with st.spinner("Calculating SHAP values..."):
+            explainer = ShapExplainer(st.session_state.model)
+            shap_values = explainer.generate_shap_values(st.session_state.data)
+            st.session_state.shap_values = shap_values
 
-        shap_values = st.session_state.shap_values
-        plots = st.session_state.plots
+            visualizer = ShapVisualizer()
+            st.session_state.plots = visualizer.create_all_plots(shap_values, st.session_state.data)
+            st.session_state.shap_summary_img_base64 = get_img_base_64(st.session_state.plots['summary'])
 
         st.header("🔍 SHAP Analysis")
         tab1, tab2 = st.tabs(["📄 SHAP Values", "📊 Graph view"])
+
+        shap_values = st.session_state.shap_values
+        X = st.session_state.data
 
         with tab1:
             shap_df = pd.DataFrame(
@@ -194,10 +201,20 @@ def _render_content():
 
         with tab2:
             for name in ['summary', 'bar', 'beeswarm']:
-                if name in plots:
+                if name in st.session_state.plots:
                     st.markdown(f"### {name.capitalize()} Plot")
-                    st.pyplot(plots[name])
-                    plt.close(plots[name])
+                    st.pyplot(st.session_state.plots[name])
+                    plt.close(st.session_state.plots[name])
+
+def _render_feature_impact():
+    if st.button("📈 Analyze Feature Impact"):
+        shap_values = st.session_state.get("shap_values")
+        X = st.session_state.get("data")
+        plots = st.session_state.get("plots")
+
+        if shap_values is None:
+            st.warning("Run SHAP analysis first.")
+            return
 
         st.header("📊 Feature Impact")
         mean_shap = np.abs(shap_values).mean(axis=0)
@@ -219,19 +236,35 @@ def _render_content():
                 st.pyplot(fig)
                 plt.close(fig)
 
-        if 'explanation' not in st.session_state:
-            with st.spinner("Generating explanation..."):
-                agent = ShapAgent()
-                prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, X)
-                explanation = agent.generate_explanation(prompt, X.shape)
-                st.session_state.explanation = explanation
+def _render_explanation_generation():
+    if st.button("🧠 Generate Explanation with Agent"):
+        model_name = st.session_state.get("model_name")
+        X = st.session_state.get("data")
+        shap_values = st.session_state.get("shap_values")
+
+        if shap_values is None:
+            st.warning("Run SHAP analysis first.")
+            return
+
+        with st.spinner("Generating explanation..."):
+            agent = ShapAgent()
+            prompt = ShapPrompts.get_analysis_prompt(model_name, shap_values, X)
+            explanation = agent.generate_explanation(prompt, X.shape)
+            st.session_state.explanation = explanation
 
         st.header("🧠 Model Insights")
         st.markdown(st.session_state.explanation)
 
-        # PDF report
-        try:
-            explanation = st.session_state.explanation
+def _render_pdf_generation():
+    if st.button("📄 Generate PDF Report"):
+        explanation = st.session_state.get("explanation")
+        plots = st.session_state.get("plots")
+
+        if not explanation:
+            st.warning("Generate explanation first.")
+            return
+
+        with st.spinner("Generating PDF report..."):
             sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
             cleaned_data = [section.replace('*', '').replace('\n', '').strip() for section in sections]
 
@@ -251,11 +284,3 @@ def _render_content():
 
             if st.session_state.paid:
                 _render_download_button_enabled()
-
-        except Exception as e:
-            st.error("❌ Failed to generate PDF report.")
-            st.exception(e)
-
-    except Exception as e:
-        st.error(f"❌ General Error: {str(e)}")
-        st.error("Check dataset structure or try with fewer rows.")
