@@ -135,14 +135,18 @@ def _model_and_data_selection():
 
                     model = train_fn(X, y, **model_params)
 
-                    st.session_state.model = model
-                    st.session_state.model_name = selected_display_name
-                    st.session_state.data = X
-                    st.session_state.target = y
-                    st.session_state.analysis_started = True
+                    if model is not None and X is not None and y is not None:
+                        st.session_state.model = model
+                        st.session_state.model_name = selected_display_name
+                        st.session_state.data = X
+                        st.session_state.target = y
+                        st.session_state.analysis_started = True
 
-                    clear_analysis_data()
-                    st.rerun()
+                        clear_analysis_data()
+                        st.rerun()
+                    else:
+                        st.error("❌ Training failed. Please check your data and parameters.")
+
                 except Exception as e:
                     st.error(f"❌ Failed to train model: {e}")
 
