@@ -43,12 +43,24 @@ ollama run mistral
 
 #### `.env` File
 Create a `.env` file in the root of the project. This file stores secrets and api configuration values required. 
-**Note:** An example `.env` file is available in the `tests/` directory to guide you. Make sure you set all the required variables.
+**Note:** An example `.env` file is available in the `shap-agent/tests/` directory to guide you. Make sure you set all the required variables.
 
-5. **Run the app**
-```bash
-PYTHONPATH=. streamlit run app/main.py
-```
+5. **Open the Extension Dev Host**
+** Windows **
+Use the F5 key
+
+** Mac **
+Use fn + F5
+
+6. **Use the Extension Command**
+Open the command palette:
+ ** Windows **
+Ctrl + Shift + P
+
+** Mac ** 
+Cmd + Shift + P
+
+Then search for "Analyze Model with SHAP"
 
 ## 🧪 Sample Usage
 Use the models and datasets included in:
