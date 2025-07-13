@@ -18,6 +18,18 @@ from agent.prompts import ShapPrompts
 
 pdf_bytes = None
 
+# ----------------------------
+# Model registry
+# ----------------------------
+MODEL_REGISTRY = {
+    "Logistic Regression": "logistic_regression",
+    "KNN": "knn",
+    "Decision Tree": "decision_tree",
+    "Naive Bayes": "naive_bayes",
+    "SVM": "svm",
+    "Linear Regression": "linear_regression"
+}
+
 def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
     st.success(st.session_state.paid)
@@ -31,15 +43,14 @@ def home_view():
     _render_header()
     _render_sidebar()
     _check_ollama()
-
-    model_name, X, y = _model_and_data_selection()
+    _model_and_data_selection()
 
     if 'analysis_started' in st.session_state:
-        _render_content(model_name, X, y)
+        _render_content()
 
-# ---------------------------------------
-# COMPONENTS
-# ---------------------------------------
+# ----------------------------
+# UI Components
+# ----------------------------
 
 def _set_custom_css():
     with open("shap-agent/assets/styles/styles.css") as f:
@@ -86,18 +97,9 @@ def _check_ollama():
             st.warning("⚠️ Ollama is not running. Please run `ollama run mistral`")
             st.stop()
 
-# ---------------------------------------
-# MODEL + DATA SELECTION
-# ---------------------------------------
-
-MODEL_REGISTRY = {
-    "Logistic Regression": "logistic_regression",
-    "KNN": "knn",
-    "Decision Tree": "decision_tree",
-    "Naive Bayes": "naive_bayes",
-    "SVM": "svm",
-    "Linear Regression": "linear_regression"
-}
+# ----------------------------
+# Model + Data Selection
+# ----------------------------
 
 def _model_and_data_selection():
     st.subheader("1. Select a model to train:")
@@ -105,17 +107,11 @@ def _model_and_data_selection():
     selected_display_name = st.selectbox("Choose a model:", list(MODEL_REGISTRY.keys()))
     module_name = MODEL_REGISTRY[selected_display_name]
 
-    # Parámetros definidos dinámicamente por modelo
     model_params = {}
-    
     if module_name == "knn":
-        model_params["n_neighbors"] = st.number_input(
-            "Number of Neighbors (K)", min_value=1, max_value=100, value=3, step=1
-        )
+        model_params["n_neighbors"] = st.number_input("Number of Neighbors (K)", min_value=1, max_value=100, value=3, step=1)
     elif module_name == "decision_tree":
-        model_params["max_depth"] = st.number_input(
-            "Max Tree Depth", min_value=1, max_value=100, value=5, step=1
-        )
+        model_params["max_depth"] = st.number_input("Max Tree Depth", min_value=1, max_value=100, value=5, step=1)
     elif module_name == "svm":
         model_params["C"] = st.number_input("Penalty parameter C", min_value=0.01, value=1.0)
         model_params["kernel"] = st.selectbox("Kernel", options=["rbf", "linear", "poly", "sigmoid"])
@@ -150,23 +146,27 @@ def _model_and_data_selection():
                 except Exception as e:
                     st.error(f"❌ Failed to train model: {e}")
 
-            return selected_display_name, X, y
+# ----------------------------
+# SHAP Analysis + Visuals
+# ----------------------------
 
-    return None, None, None
-
-# ---------------------------------------
-# SHAP ANALYSIS + VISUALS
-# ---------------------------------------
-
-def _render_content(model_name, X, y):
+def _render_content():
     try:
-        st.success(f"✅ Model loaded: {st.session_state.model_name}")
+        model = st.session_state.get("model")
+        model_name = st.session_state.get("model_name")
+        X = st.session_state.get("data")
+        y = st.session_state.get("target")
+
+        if not all([model, model_name, X is not None, y is not None]):
+            st.error("❌ Missing model or data. Please re-upload your dataset and retrain.")
+            return
+
+        st.success(f"✅ Model loaded: {model_name}")
         st.success(f"✅ Dataset loaded. Shape: {X.shape}")
         st.dataframe(X.head(), use_container_width=True)
 
         if 'shap_values' not in st.session_state:
             with st.spinner("Calculating SHAP values..."):
-                model = st.session_state.model
                 explainer = ShapExplainer(model)
                 shap_values = explainer.generate_shap_values(X)
                 st.session_state.shap_values = shap_values
