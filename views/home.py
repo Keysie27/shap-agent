@@ -6,6 +6,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import inspect
 
 from agent.shap_agent import ShapAgent
 from services.helpers import clear_analysis_data, get_img_base_64
@@ -89,21 +90,41 @@ def _check_ollama():
 # MODEL + DATA SELECTION
 # ---------------------------------------
 
-def load_model_trainer(model_name: str):
-    module = importlib.import_module(f"sample_models.{model_name}")
-    return module.train
+MODEL_REGISTRY = {
+    "Logistic Regression": "logistic_regression",
+    "KNN": "knn",
+    "Decision Tree": "decision_tree",
+    "Naive Bayes": "naive_bayes",
+    "SVM": "svm",
+    "Linear Regression": "linear_regression"
+}
 
 def _model_and_data_selection():
     st.subheader("1. Select a model to train:")
 
-    model_files = [f.stem for f in Path("sample_models").glob("*.py") if f.stem != "__init__"]
-    selected_model = st.selectbox("Choose a model:", model_files)
+    selected_display_name = st.selectbox("Choose a model:", list(MODEL_REGISTRY.keys()))
+    module_name = MODEL_REGISTRY[selected_display_name]
 
+    st.markdown("#### (Optional) Model parameters:")
+    param_input = st.text_area("Pass parameters as `key=value` pairs, one per line:", height=100)
+
+    # Parse the text input
     model_params = {}
-    if selected_model == "knn":
-        model_params["n_neighbors"] = st.slider("Number of neighbors:", 1, 15, 5)
-    elif selected_model == "decision_tree":
-        model_params["max_depth"] = st.slider("Max depth:", 1, 20, 5)
+    if param_input.strip():
+        for line in param_input.strip().splitlines():
+            if "=" in line:
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
+                try:
+                    # Try to eval to int or float, else leave as string
+                    if value.isdigit():
+                        value = int(value)
+                    else:
+                        value = float(value)
+                except ValueError:
+                    pass  # leave as string
+                model_params[key] = value
 
     st.subheader("2. Upload your dataset (with target):")
     data_file = st.file_uploader("Upload CSV", type=["csv"])
@@ -119,11 +140,20 @@ def _model_and_data_selection():
 
             if st.button("✨ Train model ✨"):
                 try:
-                    train_fn = load_model_trainer(selected_model)
+                    model_module = importlib.import_module(f"models.sample_models.{module_name}")
+                    train_fn = model_module.train
+
+                    # Validate parameters
+                    valid_params = inspect.signature(train_fn).parameters
+                    invalid_keys = [k for k in model_params if k not in valid_params]
+                    if invalid_keys:
+                        st.error(f"❌ Invalid parameters: {', '.join(invalid_keys)}")
+                        return None, None, None
+
                     model = train_fn(X, y, **model_params)
 
                     st.session_state.model = model
-                    st.session_state.model_name = selected_model
+                    st.session_state.model_name = selected_display_name
                     st.session_state.data = X
                     st.session_state.target = y
                     st.session_state.analysis_started = True
@@ -131,9 +161,9 @@ def _model_and_data_selection():
                     clear_analysis_data()
                     st.rerun()
                 except Exception as e:
-                    st.error(f"Failed to train model: {e}")
+                    st.error(f"❌ Failed to train model: {e}")
 
-            return selected_model, X, y
+            return selected_display_name, X, y
 
     return None, None, None
 
