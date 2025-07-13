@@ -12,11 +12,17 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime, timezone
+from db.firebase import get_subscription_by_key
+from services.check_subscription import check_subscription_status
+import streamlit.components.v1 as components
 
 pdf_bytes = None
 
 def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
+
+    st.success(st.session_state.paid)    
 
     if 'pdf_bytes' not in st.session_state:
         st.session_state.pdf_bytes = None
@@ -38,7 +44,7 @@ def home_view():
     }
     </style>
 """, unsafe_allow_html=True)#'''
-
+    
     ##render each individual component
 
     # Sidebar toggle button
@@ -61,18 +67,17 @@ def home_view():
         _render_content(model_name, data_file)
     
 
-# Helper Methods 
+# Helper Methods 5
 
 def _set_custom_css():
-    with open("assets/styles/styles.css") as f:
+    with open("shap-agent/assets/styles/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def _render_toggle_button():
     st.markdown('<span id="button-after1"></span>', unsafe_allow_html=True)
-    if st.button("☰"):
-        st.session_state.sidebar_mode = (
-        'About' if st.session_state.sidebar_mode == 'Instructions' else 'Instructions'
-    )
+    if st.button("💎"):
+        st.session_state.page = "payment"
+        st.rerun()
     
 def _render_download_button_disabled():
     st.markdown('<span id="button-after4"></span>', unsafe_allow_html=True)
@@ -96,31 +101,22 @@ def _render_header():
     st.markdown("⚡ Powered by SHAP (SHapley Additive exPlanations)")
 
 def _render_sidebar():
-    # Initialize toggle state if not set
-    if 'sidebar_mode' not in st.session_state:
-        st.session_state.sidebar_mode = 'Instructions'
-
-    # Sidebar content based on mode
     with st.sidebar:
-        if st.session_state.sidebar_mode == 'Instructions':
-            st.markdown("""
-            ### ℹ️ Instructions:
-            1. Select a pre-trained model
-            2. Upload your dataset
-            3. Click the "Analyze" button
-            ---
-            ### 📋 Dataset Requirements:
-            - Dataset should contain only features (no target column)
-            - Non-numeric columns auto-converted
-            ---
-            ### 📊 Visualizations Guide:
-            - **Feature Importance**: Top features
-            - **Impact Distribution**: Feature effects
-            """)
-        else:
-            st.markdown("""
-            ### Historial
-            """)
+        st.markdown("""
+        ### ℹ️ Instructions:
+        1. Select a pre-trained model
+        2. Upload your dataset
+        3. Click the "Analyze" button
+        ---
+        ### 📋 Dataset Requirements:
+        - Dataset should contain only features (no target column)
+        - Non-numeric columns auto-converted
+        ---
+        ### 📊 Visualizations Guide:
+        - **Feature Importance**: Top features
+        - **Impact Distribution**: Feature effects
+        """)
+        
 
 
 def _check_ollama():
@@ -158,7 +154,7 @@ def _model_and_data_selection():
 def _get_model(model_name):
     #get loaded model
     try:
-        model_path = os.path.join("models", "sample_models", model_name)
+        model_path = os.path.join("shap-agent/models", "sample_models", model_name)
         model = joblib.load(model_path)
         st.session_state.model_name = model_name
         st.session_state.model = model
@@ -282,9 +278,9 @@ def _render_content(model_name, data_file):
 
         try:
             with tab2:
-                if 'impact' in plots:
-                    fig = plots['impact']
-                    summary_fig = plots.get('impact')
+                if 'importance' in plots:
+                    fig = plots['importance']
+                    summary_fig = plots.get('importance')
                     bar_chart_img_base64 = get_img_base_64(summary_fig)
                     fig.set_size_inches(10, 6)
                     st.pyplot(fig, use_container_width=True)
@@ -361,7 +357,8 @@ def _render_content(model_name, data_file):
             )
             
             #activate download button 
-            _render_download_button_enabled()
+            if st.session_state.paid == True:
+                _render_download_button_enabled()
 
         except Exception as e:
             st.error("❌ Failed to generate PDF report.")
