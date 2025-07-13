@@ -45,7 +45,7 @@ def home_view():
     _check_ollama()
     _model_and_data_selection()
 
-    if 'analysis_started' in st.session_state:
+    if all(k in st.session_state for k in ['model', 'model_name', 'data', 'target']):
         _render_content()
 
 # ----------------------------
@@ -135,18 +135,14 @@ def _model_and_data_selection():
 
                     model = train_fn(X, y, **model_params)
 
-                    if model is not None and X is not None and y is not None:
-                        st.session_state.model = model
-                        st.session_state.model_name = selected_display_name
-                        st.session_state.data = X
-                        st.session_state.target = y
-                        st.session_state.analysis_started = True
+                    st.session_state.model = model
+                    st.session_state.model_name = selected_display_name
+                    st.session_state.data = X
+                    st.session_state.target = y
+                    st.session_state.analysis_started = True
 
-                        clear_analysis_data()
-                        st.rerun()
-                    else:
-                        st.error("❌ Training failed. Please check your data and parameters.")
-
+                    clear_analysis_data()
+                    st.rerun()
                 except Exception as e:
                     st.error(f"❌ Failed to train model: {e}")
 
