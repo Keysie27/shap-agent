@@ -18,3 +18,5 @@ venv/
 
 # Streamlit cache
 .streamlit/
+
+.DS_Store

@@ -8,7 +8,7 @@ import uuid
 
 # Initialize Firebase Admin SDK 
 if not firebase_admin._apps:
-    cred = credentials.Certificate('shap-agent/db/arduino-367f9-firebase-adminsdk-fbsvc-72f0abfa1f.json')  
+    cred = credentials.Certificate('shap-agent/db/firebase_sdk.json')  
     firebase_admin.initialize_app(cred)
 
 # Get Firestore client
