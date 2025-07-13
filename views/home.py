@@ -105,26 +105,20 @@ def _model_and_data_selection():
     selected_display_name = st.selectbox("Choose a model:", list(MODEL_REGISTRY.keys()))
     module_name = MODEL_REGISTRY[selected_display_name]
 
-    st.markdown("#### (Optional) Model parameters:")
-    param_input = st.text_area("Pass parameters as `key=value` pairs, one per line:", height=100)
-
-    # Parse the text input
+    # Parámetros definidos dinámicamente por modelo
     model_params = {}
-    if param_input.strip():
-        for line in param_input.strip().splitlines():
-            if "=" in line:
-                key, value = line.split("=", 1)
-                key = key.strip()
-                value = value.strip()
-                try:
-                    # Try to eval to int or float, else leave as string
-                    if value.isdigit():
-                        value = int(value)
-                    else:
-                        value = float(value)
-                except ValueError:
-                    pass  # leave as string
-                model_params[key] = value
+    
+    if module_name == "knn":
+        model_params["n_neighbors"] = st.number_input(
+            "Number of Neighbors (K)", min_value=1, max_value=100, value=3, step=1
+        )
+    elif module_name == "decision_tree":
+        model_params["max_depth"] = st.number_input(
+            "Max Tree Depth", min_value=1, max_value=100, value=5, step=1
+        )
+    elif module_name == "svm":
+        model_params["C"] = st.number_input("Penalty parameter C", min_value=0.01, value=1.0)
+        model_params["kernel"] = st.selectbox("Kernel", options=["rbf", "linear", "poly", "sigmoid"])
 
     st.subheader("2. Upload your dataset (with target):")
     data_file = st.file_uploader("Upload CSV", type=["csv"])
@@ -142,13 +136,6 @@ def _model_and_data_selection():
                 try:
                     model_module = importlib.import_module(f"models.sample_models.{module_name}")
                     train_fn = model_module.train
-
-                    # Validate parameters
-                    valid_params = inspect.signature(train_fn).parameters
-                    invalid_keys = [k for k in model_params if k not in valid_params]
-                    if invalid_keys:
-                        st.error(f"❌ Invalid parameters: {', '.join(invalid_keys)}")
-                        return None, None, None
 
                     model = train_fn(X, y, **model_params)
 
