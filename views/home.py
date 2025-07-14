@@ -76,16 +76,17 @@ def home_view():
 
             try:
                 with st.spinner("🔍 Training model and generating SHAP values..."):
-                    X = data.drop(columns=[target_column])
+                    X_raw = data.drop(columns=[target_column])
                     y = data[target_column]
-
-                    model_module = importlib.import_module(f"models.sample_models.{module_name}")
-                    model = model_module.train(X, y, **model_params)
-
-                    X_numeric = pd.get_dummies(X, drop_first=True)
+                    # Convert categorical variables into dummy/indicator variables
+                    X_numeric = pd.get_dummies(X_raw, drop_first=False)
+                    X_numeric = X_numeric.astype(float)
                     if X_numeric.shape[1] == 0:
                         st.error("❌ No usable numeric features for SHAP.")
                         return
+
+                    model_module = importlib.import_module(f"models.sample_models.{module_name}")
+                    model = model_module.train(X_numeric, y, **model_params)
 
                     explainer = ShapExplainer(model)
                     shap_values = explainer.generate_shap_values(X_numeric)
