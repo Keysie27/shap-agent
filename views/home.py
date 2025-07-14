@@ -5,6 +5,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import LabelEncoder
 
 from agent.shap_agent import ShapAgent
 from services.helpers import clear_analysis_data, get_img_base_64
@@ -76,14 +77,16 @@ def home_view():
             try:
                 with st.spinner("🔍 Training model and generating SHAP values..."):
                     X_raw = data.drop(columns=[target_column])
-                    y = data[target_column]
+                    y_raw = data[target_column]
                     # Convert categorical variables into dummy/indicator variables
                     X_numeric = pd.get_dummies(X_raw, drop_first=False)
                     X_numeric = X_numeric.astype(float)
                     if X_numeric.shape[1] == 0:
                         st.error("❌ No usable numeric features for SHAP.")
                         return
-
+                    label_encoder = LabelEncoder()
+                    y = label_encoder.fit_transform(y_raw)
+                    class_names = label_encoder.classes_
                     model_module = importlib.import_module(f"models.sample_models.{module_name}")
                     model = model_module.train(X_numeric, y, **model_params)
 
