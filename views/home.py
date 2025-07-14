@@ -70,7 +70,7 @@ def home_view():
 
         if st.button("✨ Explain my model ✨", use_container_width=True):
             clear_analysis_data()
-            st.markdown("## 🔧 Training and SHAP Analysis")
+            st.markdown("## Training and SHAP Analysis")
 
             try:
                 with st.spinner("🔍 Training model and generating SHAP values..."):
@@ -100,7 +100,7 @@ def home_view():
                         'shap_summary_img_base64': summary_base64
                     })
 
-                    st.success("✅ SHAP analysis complete!")
+                    st.success("✅ Model trained and SHAP analysis complete!")
 
                     tab1, tab2 = st.tabs(["📄 Raw SHAP Values", "📊 Feature Impact"])
                     with tab1:
@@ -116,7 +116,7 @@ def home_view():
                 st.error(f"❌ SHAP Analysis Error: {e}")
                 return
 
-            st.markdown("## 🧠 AI Explanation")
+            st.markdown("## AI Explanation")
             try:
                 with st.spinner("✨ Generating AI explanation..."):
                     agent = ShapAgent()
@@ -146,10 +146,29 @@ def home_view():
                     practical_recommendations=recommendations
                 )
 
-                st.download_button("📥 Download PDF", pdf_bytes, "shap_report.pdf", mime="application/pdf")
-                st.success("✅ PDF report ready!")
+                st.markdown("<br>", unsafe_allow_html=True)
+                if st.session_state.get('paid', False):
+                    st.download_button("📥  Download Advanced Report", pdf_bytes, "shap_report.pdf", mime="application/pdf")
+                    st.success("✅ Advanced report ready!")
+                else:
+                    st.markdown("""
+                        <style>
+                        .disabled-button {
+                            background-color: #cccccc !important;
+                            color: #666666 !important;
+                            cursor: not-allowed !important;
+                            border-radius: 8px;
+                            padding: 0.5em 1em;
+                            font-weight: bold;
+                            border: none;
+                        }
+                        </style>
+                        <button class="disabled-button" disabled>📥  Advanced Report</button>
+                    """, unsafe_allow_html=True)
+                    st.info("🔒  Advanced report download is available for premium users only.")
+
             except Exception as e:
-                st.error(f"❌ PDF Generation Error: {e}")
+                st.error(f"❌ Report Generation Error: {e}")
 
 # UI elements
 
