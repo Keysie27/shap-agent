@@ -65,7 +65,9 @@ def home_view():
 
     if data_file:
         data = pd.read_csv(data_file)
+        st.markdown(" 👀 Take a look at your data:")
         st.dataframe(data.head(3))
+        st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("Select the target column:", data.columns)
 
         if st.button("✨ Explain my model ✨", use_container_width=True):
@@ -90,6 +92,29 @@ def home_view():
 
                     visualizer = ShapVisualizer()
                     plots = visualizer.create_all_plots(shap_values, X_numeric)
+                    plt.style.use('dark_background')
+                    if 'importance' in plots:
+                        fig = plots['importance']
+                        fig.set_size_inches(8, 4)
+                        fig.patch.set_facecolor('#0e1117')  # Dark background
+                        fig.patch.set_alpha(0.8)  # Slight transparency
+                        ax = fig.axes[0]
+                        ax.set_facecolor("#0e1117") # Background for the axes
+
+                        # Set axis labels and title colors
+                        ax.title.set_color('white')
+                        ax.xaxis.label.set_color('white')
+                        ax.yaxis.label.set_color('white')
+                        ax.tick_params(axis='x', colors='white')
+                        ax.tick_params(axis='y', colors='white')
+                        ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
+                        ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
+
+                        # Style bars
+                        for bar in ax.patches:
+                            bar.set_color("#8EA0F0")  # Color for bars
+                            # bar.set_alpha(0.4) # Slight transparency for bars
+
                     summary_base64 = get_img_base_64(plots['summary']) if 'summary' in plots else None
                     bar_base64 = get_img_base_64(plots['importance']) if 'importance' in plots else None
 
@@ -102,15 +127,15 @@ def home_view():
 
                     st.success("✅ Model trained and SHAP analysis complete!")
 
-                    tab1, tab2 = st.tabs(["📄 Raw SHAP Values", "📊 Feature Impact"])
+                    tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
                     with tab1:
+                        st.pyplot(plots['importance'])
+                    with tab2:
                         shap_df = pd.DataFrame(
                             shap_values[0] if len(shap_values.shape) == 3 else shap_values,
                             columns=X_numeric.columns
                         )
                         st.dataframe(shap_df.head(), use_container_width=True)
-                    with tab2:
-                        st.pyplot(plots['importance'])
 
             except Exception as e:
                 st.error(f"❌ SHAP Analysis Error: {e}")
@@ -148,8 +173,8 @@ def home_view():
 
                 st.markdown("<br>", unsafe_allow_html=True)
                 if st.session_state.get('paid', False):
-                    st.download_button("📥  Download Advanced Report", pdf_bytes, "shap_report.pdf", mime="application/pdf")
-                    st.success("✅ Advanced report ready!")
+                    st.success("✅ XAI Advanced report is ready!")
+                    st.download_button("📥 Download XAI report", pdf_bytes, "shap_report.pdf", mime="application/pdf")
                 else:
                     st.markdown("""
                         <style>
@@ -163,9 +188,9 @@ def home_view():
                             border: none;
                         }
                         </style>
-                        <button class="disabled-button" disabled>📥  Advanced Report</button>
+                        <button class="disabled-button" disabled>📥 Advanced XAI Report</button>
                     """, unsafe_allow_html=True)
-                    st.info("🔒  Advanced report download is available for premium users only.")
+                    st.info("🔒  Advanced XAI report is available for premium users only.")
 
             except Exception as e:
                 st.error(f"❌ Report Generation Error: {e}")
@@ -198,7 +223,7 @@ def _render_sidebar():
         - Feature impact analysis
         - SHAP visualizations
         - AI-powered explanation
-        - PDF report
+        - Advanced XAI report
         """)
 
 def _check_ollama():
