@@ -17,7 +17,6 @@ from agent.prompts import ShapPrompts
 MODEL_REGISTRY = {
     "Logistic Regression": "logistic_regression",
     "KNN": "knn",
-    "Decision Tree": "decision_tree",
     "Naive Bayes": "naive_bayes",
     "SVM": "svm",
     "Linear Regression": "linear_regression"
