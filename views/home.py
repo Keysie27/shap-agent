@@ -41,8 +41,8 @@ def home_view():
     elif module_name == "decision_tree":
         model_params["max_depth"] = st.number_input("Max Depth", min_value=1, max_value=100, value=5)
 
-    st.subheader("2. Upload your dataset:")
-    data_file = st.file_uploader("Upload CSV (must include a target column):", type=["csv"])
+    st.subheader("2. Upload your training dataset:")
+    data_file = st.file_uploader("Upload CSV (must include the target column):", type=["csv"])
 
     purple_button_style = """
         <style>
@@ -68,7 +68,14 @@ def home_view():
         st.markdown(" 👀 Take a look at your data:")
         st.dataframe(data.head(3))
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
-        target_column = st.selectbox("Select the target column:", data.columns)
+        target_column = st.selectbox("❗Select the target column:", data.columns)
+
+        st.subheader("3. Enter your test data:")
+        test_input_data = {}
+        input_columns = [col for col in data.columns if col != target_column]
+        for col in input_columns:
+            default_val = data[col].median() if np.issubdtype(data[col].dtype, np.number) else ""
+            test_input_data[col] = st.text_input(f"{col}", value=str(default_val))
 
         if st.button("✨ Explain my model ✨", use_container_width=True):
             clear_analysis_data()
@@ -78,20 +85,36 @@ def home_view():
                 with st.spinner("🔍 Training model and generating SHAP values..."):
                     X_raw = data.drop(columns=[target_column])
                     y_raw = data[target_column]
-                    # Convert categorical variables into dummy/indicator variables
-                    X_numeric = pd.get_dummies(X_raw, drop_first=False)
-                    X_numeric = X_numeric.astype(float)
+                    X_numeric = pd.get_dummies(X_raw, drop_first=False).astype(float)
                     if X_numeric.shape[1] == 0:
                         st.error("❌ No usable numeric features for SHAP.")
                         return
-                    label_encoder = LabelEncoder()
-                    y = label_encoder.fit_transform(y_raw)
-                    class_names = label_encoder.classes_
+
+                    if module_name == "linear_regression":
+                        y = y_raw  # keep numeric values
+                    else:
+                        label_encoder = LabelEncoder()
+                        y = label_encoder.fit_transform(y_raw)
+                        class_names = label_encoder.classes_ # Get class names for predictions for future use
+
                     model_module = importlib.import_module(f"models.sample_models.{module_name}")
                     model = model_module.train(X_numeric, y, **model_params)
 
+                    test_df = pd.DataFrame([test_input_data]).astype(str)
+                    test_df = pd.get_dummies(test_df)
+                    test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
+
+                    prediction = model.predict(test_df)[0]
+                    if module_name == "linear_regression":
+                        predicted_label = prediction
+                    else:
+                        predicted_label = label_encoder.inverse_transform([prediction])[0]
+
+                    st.write(f"🔮 **Model Prediction for Input:** `{predicted_label}`")
+
                     explainer = ShapExplainer(model)
                     shap_values = explainer.generate_shap_values(X_numeric)
+                    test_shap_values = explainer.generate_shap_values(test_df)
 
                     visualizer = ShapVisualizer()
                     plots = visualizer.create_all_plots(shap_values, X_numeric)
@@ -99,12 +122,10 @@ def home_view():
                     if 'importance' in plots:
                         fig = plots['importance']
                         fig.set_size_inches(8, 4)
-                        fig.patch.set_facecolor('#0e1117')  # Dark background
-                        fig.patch.set_alpha(0.8)  # Slight transparency
+                        fig.patch.set_facecolor('#0e1117')
+                        fig.patch.set_alpha(0.8)
                         ax = fig.axes[0]
-                        ax.set_facecolor("#0e1117") # Background for the axes
-
-                        # Set axis labels and title colors
+                        ax.set_facecolor("#0e1117")
                         ax.title.set_color('white')
                         ax.xaxis.label.set_color('white')
                         ax.yaxis.label.set_color('white')
@@ -112,11 +133,8 @@ def home_view():
                         ax.tick_params(axis='y', colors='white')
                         ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
                         ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
-
-                        # Style bars
                         for bar in ax.patches:
-                            bar.set_color("#8EA0F0")  # Color for bars
-                            # bar.set_alpha(0.4) # Slight transparency for bars
+                            bar.set_color("#8EA0F0")
 
                     summary_base64 = get_img_base_64(plots['summary']) if 'summary' in plots else None
                     bar_base64 = get_img_base_64(plots['importance']) if 'importance' in plots else None
@@ -220,7 +238,8 @@ def _render_sidebar():
         ### Instructions:
         1. Choose a model
         2. Upload CSV with target column
-        3. Click '✨ Explain my model ✨'
+        3. Enter test data
+        4. Click '✨ Explain my model ✨'
         ---
         Output includes:
         - Feature impact analysis
