@@ -1,6 +1,6 @@
 from sklearn.linear_model import LogisticRegression
 
-def train(X_train, y_train, **kwargs):
+def train(X, y, **kwargs):
     model = LogisticRegression(**kwargs)
-    model.fit(X_train, y_train)
+    model.fit(X, y)
     return model
