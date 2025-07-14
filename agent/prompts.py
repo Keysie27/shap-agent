@@ -40,11 +40,10 @@ class ShapPrompts:
         "The **{model_name}** model is primarily influenced by: **feature1**, **feature2**, and **feature3**."
 
         **2. Top Feature Analysis**  
-        For each of the top 3 features:  
-        - **Feature Name**:  
-            • Direction of impact (positive/negative)  
-            • Relative importance compared to others  
-            • Potential business interpretation
+        - **Feature Name**:
+        For each of the top 3 features:   
+        • Relative importance compared to others  
+        • Potential business interpretation
 
         **3. Key Observations**  
         • Note any surprising relationships  
@@ -58,9 +57,10 @@ class ShapPrompts:
         • Tip for monitoring model performance  
         • Strategy suggestion for business users  
         • Opportunity for further analysis
+        • Example of results with test values 
 
         **Formatting Requirements:**  
-        - Use bullet points (•) for lists  
+        - Use bullet points (-) for lists  
         - Keep feature names in **bold**  
         - Use simple business language (avoid technical jargon)  
         - Keep the full response under 200 words  
