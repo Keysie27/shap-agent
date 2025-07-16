@@ -15,15 +15,14 @@ def main():
 
     if "page" not in st.session_state:
         st.session_state.page = "mode_selector"
-
     if st.session_state.page == "plans":
         plans_view()
+    if st.session_state.page == "mode_selector" or "explanation_mode" not in st.session_state:
+        mode_selector_view()
     elif st.session_state.page == "payment":
         payment_view()
     elif st.session_state.page == "home":
         home_view()
-    elif st.session_state.page == "mode_selector" or "explanation_mode" not in st.session_state:
-        mode_selector_view()
     else:
         st.error("❌ Unknown page. Please restart the app.")
 

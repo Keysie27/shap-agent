@@ -259,10 +259,16 @@ def _set_custom_css():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def _render_toggle_button():
-    st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
-    if st.button("💎 Upgrade to Premium", key="toggle_button"):
-        st.session_state.page = "plans"
-        st.rerun()
+    col1, col2 = st.columns([1, 4])
+    with col1:
+        if st.button("⬅ Back", key="back_button"):
+            st.session_state.page = "mode_selector"
+            st.rerun()
+
+    with col2:
+        if st.button("💎 Upgrade to Premium", key="toggle_button"):
+            st.session_state.page = "plans"
+            st.rerun()
 
 def _render_header():
     st.title("💡 SHAP-Agent: AI Model Explanation")

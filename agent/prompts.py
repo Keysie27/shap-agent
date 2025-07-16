@@ -86,28 +86,24 @@ class ShapPrompts:
 
     **Please follow this structure:**
 
-    **1. Executive Summary**  
+    **1. Summary**
     Summarize which features most influence the predictions. Clarify whether these results align with domain expectations and any surprises.
 
-    **2. Feature Interpretations**  
+    **2. Feature Breakdown**
     For the top 3–5 features:
     - What user behavior or pattern does each represent?
     - Are they positively or negatively correlated with the output?
     - Do they show threshold effects or non-linear behavior?
     - Are there clear interactions with other features?
 
-    **3. Unexpected Patterns**  
+    **3. Observations** 
     - Are there features with unexpectedly high or low influence?
     - Are any expected drivers missing?
     - Mention unstable, volatile or counterintuitive effects.
 
-    **4. Recommendations**  
+    **4. Actionable Tips**  
     - Suggest 2 improvements to input data or data engineering (e.g., add features, fix skew).
-    - Propose 2 business use cases for this model (e.g., early alerts, prioritization).
-    - Describe 1 suggestion for model monitoring, drift detection or retraining frequency.
-
-    **5. Example-Based Interpretability**  
-    Provide up to 2 brief examples from the dataset showing how the model interprets real users:
+    - Provide up to 2 brief examples from the dataset showing how the model interprets real users:
     {sample_cases}
 
     🧠 Use semi-technical language but remain clear and structured.  
