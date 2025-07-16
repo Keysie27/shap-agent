@@ -16,6 +16,8 @@ db = firestore.client()
 
 # Function to add subscription data
 def add_subscription(time):
+    from services.subscription_handler import update_field
+
     if time == "month":
         days = 30
     elif time == "year":
@@ -31,14 +33,14 @@ def add_subscription(time):
         'expDate': expDate,
         'key': key
     })
+    
+    update_field('subscription_key', key)
 
 # fetch in for subscription key in db
 def get_subscription_by_key():
-    #check .env file for search key
-    EXTENSION_ROOT = pathlib.Path(__file__).parent.parent.parent  
-    env_path = EXTENSION_ROOT / '.env'
-    load_dotenv(dotenv_path=env_path, override=True)
-    search_key = os.getenv("API_KEY")
+    from services.subscription_handler import load_data
+
+    search_key = load_data()['subscription_key']
         
     #fetch firebase db
     subscriptions_ref = db.collection('subscriptions')

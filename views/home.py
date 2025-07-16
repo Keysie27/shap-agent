@@ -5,8 +5,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from datetime import datetime
 from sklearn.preprocessing import LabelEncoder
-
+from services.subscription_handler import update_field, load_data
 from agent.shap_agent import ShapAgent
 from services.helpers import clear_analysis_data, get_img_base_64
 from services.pdf_generator import create_shap_report_pdf
@@ -25,10 +26,33 @@ MODEL_REGISTRY = {
 
 def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
+    
+    #hide dev toolbar
+    #'''
+    st.markdown("""
+    <style>
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    .main .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)#'''
+    
     _render_toggle_button()
+    
     _set_custom_css()
+    
     _render_header()
+    
     _render_sidebar()
+    
     _check_ollama()
 
     st.subheader("1. Select a model:")
@@ -76,146 +100,150 @@ def home_view():
         for col in input_columns:
             default_val = data[col].median() if np.issubdtype(data[col].dtype, np.number) else ""
             test_input_data[col] = st.text_input(f"{col}", value=str(default_val))
+            
+        update_field("date", datetime.now().date().isoformat())
 
-        if st.button("✨ Explain my model ✨", use_container_width=True):
-            clear_analysis_data()
-            st.markdown("## Training and SHAP Analysis")
+        if st.session_state.paid or load_data()['count'] < 3:
+            if st.button("✨ Explain my model ✨", use_container_width=True):
+                st.session_state.loading = True
+                
+                clear_analysis_data()
+                st.markdown("## Training and SHAP Analysis")
 
-            try:
-                with st.spinner("🔍 Training model and generating SHAP values..."):
-                    X_raw = data.drop(columns=[target_column])
-                    y_raw = data[target_column]
-                    X_numeric = pd.get_dummies(X_raw, drop_first=False).astype(float)
-                    if X_numeric.shape[1] == 0:
-                        st.error("❌ No usable numeric features for SHAP.")
-                        return
+                try:
+                    with st.spinner("🔍 Training model and generating SHAP values..."):
+                        X_raw = data.drop(columns=[target_column])
+                        y_raw = data[target_column]
+                        X_numeric = pd.get_dummies(X_raw, drop_first=False).astype(float)
+                        if X_numeric.shape[1] == 0:
+                            st.error("❌ No usable numeric features for SHAP.")
+                            return
 
-                    if module_name == "linear_regression":
-                        y = y_raw  # keep numeric values
+                        if module_name == "linear_regression":
+                            y = y_raw  # keep numeric values
+                        else:
+                            label_encoder = LabelEncoder()
+                            y = label_encoder.fit_transform(y_raw)
+                            class_names = label_encoder.classes_ # Get class names for predictions for future use
+
+                        model_module = importlib.import_module(f"models.sample_models.{module_name}")
+                        model = model_module.train(X_numeric, y, **model_params)
+
+                        test_df = pd.DataFrame([test_input_data]).astype(str)
+                        test_df = pd.get_dummies(test_df)
+                        test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
+
+                        prediction = model.predict(test_df)[0]
+                        if module_name == "linear_regression":
+                            predicted_label = prediction
+                        else:
+                            predicted_label = label_encoder.inverse_transform([prediction])[0]
+
+                        st.write(f"🔮 **Model Prediction for Input:** `{predicted_label}`")
+
+                        explainer = ShapExplainer(model)
+                        shap_values = explainer.generate_shap_values(X_numeric)
+                        test_shap_values = explainer.generate_shap_values(test_df)
+
+                        visualizer = ShapVisualizer()
+                        plots = visualizer.create_all_plots(shap_values, X_numeric)
+                        plt.style.use('dark_background')
+                        if 'importance' in plots:
+                            fig = plots['importance']
+                            fig.set_size_inches(8, 4)
+                            fig.patch.set_facecolor('#0e1117')
+                            fig.patch.set_alpha(0.8)
+                            ax = fig.axes[0]
+                            ax.set_facecolor("#0e1117")
+                            ax.title.set_color('white')
+                            ax.xaxis.label.set_color('white')
+                            ax.yaxis.label.set_color('white')
+                            ax.tick_params(axis='x', colors='white')
+                            ax.tick_params(axis='y', colors='white')
+                            ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
+                            ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
+                            for bar in ax.patches:
+                                bar.set_color("#8EA0F0")
+    
+                        summary_base64 = get_img_base_64(plots['summary']) if 'summary' in plots else None
+                        bar_base64 = get_img_base_64(plots['importance']) if 'importance' in plots else None
+
+                        st.session_state.update({
+                            'model_name': selected_display_name,
+                            'shap_values': shap_values,
+                            'plots': plots,
+                            'shap_summary_img_base64': summary_base64
+                        })
+
+                        st.success("✅ Model trained and SHAP analysis complete!")
+
+                        tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
+                        with tab1:
+                            st.pyplot(plots['importance'])
+                        with tab2:
+                            shap_df = pd.DataFrame(
+                                shap_values[0] if len(shap_values.shape) == 3 else shap_values,
+                                columns=X_numeric.columns
+                            )
+                            st.dataframe(shap_df.head(), use_container_width=True)
+
+                except Exception as e:
+                    st.error(f"❌ SHAP Analysis Error: {e}")
+                    return
+
+                st.markdown("## AI Explanation")
+                try:
+                    with st.spinner("✨ Generating AI explanation..."):
+                        agent = ShapAgent()
+                        prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
+                        explanation = agent.generate_explanation(prompt, X_numeric.shape)
+                        st.session_state['explanation'] = explanation
+                        st.markdown(explanation)
+                except Exception as e:
+                    st.error(f"❌ Explanation Error: {e}")
+                    return
+
+                try:
+                    sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
+                    cleaned = [s.replace('*', '').strip() for s in sections]
+
+                    summary = cleaned[1] if len(cleaned) >= 2 else "No summary available."
+                    top_features = [s.strip() for s in re.split(r"- (?=Feature Name|\*\*|[\w])", cleaned[2])] if len(cleaned) >= 3 else []
+                    observations = [s.strip() for s in cleaned[3].split('- ')] if len(cleaned) >= 4 else []
+                    recommendations = [s.strip() for s in cleaned[4].split('- ')] if len(cleaned) >= 5 else []
+
+                    pdf_bytes = create_shap_report_pdf(
+                        shap_summary_img_base64=summary_base64,
+                        bar_chart_img_base64=bar_base64,
+                        top_influencers_sentence=summary,
+                        feature_analysis_points=top_features,
+                        key_observations_points=observations,
+                        practical_recommendations=recommendations
+                    )
+                    
+                    if st.session_state.loading == True:
+                        #when finished analysis, add to counter
+                        update_field("count")
+                        st.session_state.loading = False
+
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.session_state.get('paid', False):
+                        st.success("✅ XAI Advanced report is ready!")
+                        st.download_button("📥 Download XAI report", pdf_bytes, "shap_report.pdf", mime="application/pdf")
                     else:
-                        label_encoder = LabelEncoder()
-                        y = label_encoder.fit_transform(y_raw)
-                        class_names = label_encoder.classes_ # Get class names for predictions for future use
+                        st.markdown("""
+                            <button class="disabled-button" disabled>📥 Advanced XAI Report</button>
+                        """, unsafe_allow_html=True)
+                        st.info("🔒  Advanced XAI report is available for premium users only.")
 
-                    model_module = importlib.import_module(f"models.sample_models.{module_name}")
-                    model = model_module.train(X_numeric, y, **model_params)
+                except Exception as e:
+                    st.error(f"❌ Report Generation Error: {e}")
 
-                    test_df = pd.DataFrame([test_input_data]).astype(str)
-                    test_df = pd.get_dummies(test_df)
-                    test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
-
-                    prediction = model.predict(test_df)[0]
-                    if module_name == "linear_regression":
-                        predicted_label = prediction
-                    else:
-                        predicted_label = label_encoder.inverse_transform([prediction])[0]
-
-                    st.write(f"🔮 **Model Prediction for Input:** `{predicted_label}`")
-
-                    explainer = ShapExplainer(model)
-                    shap_values = explainer.generate_shap_values(X_numeric)
-                    test_shap_values = explainer.generate_shap_values(test_df)
-
-                    visualizer = ShapVisualizer()
-                    plots = visualizer.create_all_plots(shap_values, X_numeric)
-                    plt.style.use('dark_background')
-                    if 'importance' in plots:
-                        fig = plots['importance']
-                        fig.set_size_inches(8, 4)
-                        fig.patch.set_facecolor('#0e1117')
-                        fig.patch.set_alpha(0.8)
-                        ax = fig.axes[0]
-                        ax.set_facecolor("#0e1117")
-                        ax.title.set_color('white')
-                        ax.xaxis.label.set_color('white')
-                        ax.yaxis.label.set_color('white')
-                        ax.tick_params(axis='x', colors='white')
-                        ax.tick_params(axis='y', colors='white')
-                        ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
-                        ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
-                        for bar in ax.patches:
-                            bar.set_color("#8EA0F0")
-
-                    summary_base64 = get_img_base_64(plots['summary']) if 'summary' in plots else None
-                    bar_base64 = get_img_base_64(plots['importance']) if 'importance' in plots else None
-
-                    st.session_state.update({
-                        'model_name': selected_display_name,
-                        'shap_values': shap_values,
-                        'plots': plots,
-                        'shap_summary_img_base64': summary_base64
-                    })
-
-                    st.success("✅ Model trained and SHAP analysis complete!")
-
-                    tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
-                    with tab1:
-                        st.pyplot(plots['importance'])
-                    with tab2:
-                        shap_df = pd.DataFrame(
-                            shap_values[0] if len(shap_values.shape) == 3 else shap_values,
-                            columns=X_numeric.columns
-                        )
-                        st.dataframe(shap_df.head(), use_container_width=True)
-
-            except Exception as e:
-                st.error(f"❌ SHAP Analysis Error: {e}")
-                return
-
-            st.markdown("## AI Explanation")
-            try:
-                with st.spinner("✨ Generating AI explanation..."):
-                    agent = ShapAgent()
-                    prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
-                    explanation = agent.generate_explanation(prompt, X_numeric.shape)
-                    st.session_state['explanation'] = explanation
-                    st.markdown(explanation)
-            except Exception as e:
-                st.error(f"❌ Explanation Error: {e}")
-                return
-
-            try:
-                sections = re.split(r"\*\*\d+\.\s?", explanation.strip())
-                cleaned = [s.replace('*', '').strip() for s in sections]
-
-                summary = cleaned[1] if len(cleaned) >= 2 else "No summary available."
-                top_features = [s.strip() for s in re.split(r"- (?=Feature Name|\*\*|[\w])", cleaned[2])] if len(cleaned) >= 3 else []
-                observations = [s.strip() for s in cleaned[3].split('- ')] if len(cleaned) >= 4 else []
-                recommendations = [s.strip() for s in cleaned[4].split('- ')] if len(cleaned) >= 5 else []
-
-                pdf_bytes = create_shap_report_pdf(
-                    shap_summary_img_base64=summary_base64,
-                    bar_chart_img_base64=bar_base64,
-                    top_influencers_sentence=summary,
-                    feature_analysis_points=top_features,
-                    key_observations_points=observations,
-                    practical_recommendations=recommendations
-                )
-
-                st.markdown("<br>", unsafe_allow_html=True)
-                if st.session_state.get('paid', False):
-                    st.success("✅ XAI Advanced report is ready!")
-                    st.download_button("📥 Download XAI report", pdf_bytes, "shap_report.pdf", mime="application/pdf")
-                else:
-                    st.markdown("""
-                        <style>
-                        .disabled-button {
-                            background-color: #cccccc !important;
-                            color: #666666 !important;
-                            cursor: not-allowed !important;
-                            border-radius: 8px;
-                            padding: 0.5em 1em;
-                            font-weight: bold;
-                            border: none;
-                        }
-                        </style>
-                        <button class="disabled-button" disabled>📥 Advanced XAI Report</button>
-                    """, unsafe_allow_html=True)
-                    st.info("🔒  Advanced XAI report is available for premium users only.")
-
-            except Exception as e:
-                st.error(f"❌ Report Generation Error: {e}")
-
+        else:
+            st.markdown("""
+                <button class="disabled-button" style="width: 100%" disabled> Explain my model </button>
+            """, unsafe_allow_html=True)
+            st.info("🔒  Daily limit reached on the free plan. Upgrade for unlimited use.")
 # UI elements
 
 def _set_custom_css():
@@ -225,7 +253,7 @@ def _set_custom_css():
 def _render_toggle_button():
     st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
     if st.button("💎 Get Premium", key="toggle_button"):
-        st.session_state.page = "payment"
+        st.session_state.page = "plans"
         st.rerun()
 
 def _render_header():
