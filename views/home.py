@@ -104,7 +104,7 @@ def home_view():
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("❗Select the target column:", data.columns)
 
-        st.subheader("3. Enter your test data:")
+        st.subheader("3. Enter data to test your model:")
         test_input_data = {}
         input_columns = [col for col in data.columns if col != target_column]
         for col in input_columns:
@@ -277,6 +277,22 @@ def _render_header():
     st.title("💡 SHAP-Agent: AI Model Explanation")
     st.markdown("Understand how your ML model makes decisions!")
 
+    # Show selected mode
+    mode = st.session_state.get("explanation_mode", "standard")
+
+    if mode == "advanced":
+        st.markdown("""
+            <div style="border: 2px solid #6f42c1; color: white; padding: 0.7rem 1rem; border-radius: 10px; margin-top: 0.5rem; margin-bottom: 1.5rem; font-size: 16px;">
+                🚀 <strong>Pro Insights (Advanced)</strong> mode is active.
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <div style="border: 2px solid #6f42c1; color: white; padding: 0.7rem 1rem; border-radius: 10px; margin-top: 0.5rem; margin-bottom: 1.5rem; font-size: 16px;">
+                🧠 <strong>Smart Insights (Standard)</strong> mode is active.
+            </div>
+        """, unsafe_allow_html=True)
+
 def _render_sidebar():
     with st.sidebar:
         st.markdown("""
@@ -284,11 +300,11 @@ def _render_sidebar():
         1. Choose a model
         2. Upload CSV with target column
         3. Enter test data
-        4. Click '✨ Explain my model ✨'
+        4. Click on ✨Explain my model✨
         ---
-        Output includes:
+        ### Output includes:
         - Feature impact analysis
-        - SHAP visualizations
+        - Visualizations
         - AI-powered explanation
         - Advanced XAI report
         """)
