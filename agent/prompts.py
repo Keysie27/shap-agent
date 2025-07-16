@@ -97,4 +97,5 @@ class ShapPrompts:
         🧠 Use semi-technical language but remain clear.  
         ✍️ Prefer bullet points or concise blocks.  
         🎯 Stay under 350 words. No markdown beyond bold and numbered sections.
+        Note: Include examples with numbers and statistics where relevant.
         """
