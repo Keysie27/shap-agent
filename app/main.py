@@ -8,24 +8,24 @@ import streamlit as st
 def main():
     import warnings
     warnings.filterwarnings("ignore")
-            
-    #verify if user is logged in
+
     data = get_subscription_by_key()
     valid = verify_key(data)
     st.session_state.paid = valid
-        
-    #check which view to load
-    if "explanation_mode" not in st.session_state:
-        mode_selector_view()
 
-    elif "page" not in st.session_state or st.session_state.page == "home":
-        home_view()
+    if "page" not in st.session_state:
+        st.session_state.page = "mode_selector"
 
-    elif st.session_state.page == "plans":
+    if st.session_state.page == "plans":
         plans_view()
-
     elif st.session_state.page == "payment":
         payment_view()
+    elif st.session_state.page == "home":
+        home_view()
+    elif st.session_state.page == "mode_selector" or "explanation_mode" not in st.session_state:
+        mode_selector_view()
+    else:
+        st.error("❌ Unknown page. Please restart the app.")
 
 if __name__ == "__main__":
     main()
