@@ -112,6 +112,20 @@
     color: rgb(106, 75, 238);
 }
 
+.element-container:has(#button-after9)+div button {
+    margin-left: auto;
+    display: flex;
+    background-color: #694BED !important;
+    margin-top: -20px;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.element-container:has(#button-after9)+div button:hover {
+    border: none;
+    transform: translateY(-2px);
+}
+
 .price-container1 {
     background: #141414;
     border-radius: 5px;
@@ -276,4 +290,131 @@
     width: 100px !important;
     visibility: visible !important;
     margin-left: 90px !important;
+}
+
+.disabled-button {
+    background-color: #cccccc !important;
+    color: #666666 !important;
+    cursor: not-allowed !important;
+    border-radius: 8px;
+    padding: 0.5em 1em;
+    font-weight: bold;
+    border: none;
+}
+
+.payment-body {
+    min-width: 1000px;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+}
+
+.payment-container {
+    background-color: #141414;
+    width: 560px;
+    height: 680px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    position: absolute;
+    margin-top: -600px;
+    border-radius: 15px;
+}
+
+.card-svg {
+    margin-top: 40px;
+    height: 230px;
+    width: 400px;
+    z-index: 1;
+    border-radius: 10px;
+}
+
+.card-info {
+    margin-top: -165px;
+    padding: 20px;
+}
+
+.card-number {
+    display: flex;
+    letter-spacing: 9px;
+    font-size: 18px !important;
+    font-weight: bold;
+    gap: 17px;
+    justify-content: left;
+}
+
+.card-labels {
+    padding-top: 35px;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: -20px;
+}
+
+.card-values {
+    display: flex;
+    justify-content: space-between;
+}
+
+.element-container:has(#input-after1)+div {
+    margin-top: 300px;
+    padding-left: 50px;
+    width: 100%;
+    z-index: 1;
+}
+
+.element-container:has(#input-after2)+div {
+    margin-top: -10px;
+    padding-left: 50px;
+    width: 100%;
+    z-index: 1;
+
+}
+
+.element-container:has(#input-after3)+div {
+    margin-top: -10px;
+    margin-left: auto;
+    width: 100px;
+    z-index: 1;
+
+}
+
+.element-container:has(#input-after4)+div {
+    margin-top: -100px;
+    padding-left: 50px;
+    width: 130px;
+    z-index: 1;
+
+}
+
+.element-container:has(#input-after5)+div {
+    margin-top: -100px;
+    margin-left: 135px;
+    width: 90px;
+    z-index: 1;
+
+}
+
+.card-chip {
+    background-color: white;
+    width: 70px;
+    height: 50px;
+    z-index: 2;
+    position: absolute;
+    top: 55px;
+    margin-left: 20px;
+    border-radius: 10px;
+
+}
+
+.error-div {
+    background-color: rgba(101, 50, 50, 0.5);
+    width: fit-content;
+    height: 20px;
+    height: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-left: 40px;
+    margin-top: -47px;
+    border-radius: 10px;
+    padding-top: 7px;
 }

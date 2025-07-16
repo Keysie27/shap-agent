@@ -2,18 +2,16 @@ import re
 import streamlit as st
 import streamlit.components.v1 as components
 from db.firebase import add_subscription
-
-pdf_bytes = None
+from datetime import datetime
 
 def payment_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
     
-    if "price" not in st.session_state:
-      st.session_state.price = "12.99"
-      st.session_state.time = "month"
-
+    if "card_number" not in st.session_state:
+        st.session_state.card_number = ""
+    
     #hide dev toolbar
-    #'''
+    '''
     st.markdown("""
     <style>
     [data-testid="stToolbar"] {
@@ -28,21 +26,17 @@ def payment_view():
         padding-top: 1rem;
     }
     </style>
-""", unsafe_allow_html=True)#'''
+""", unsafe_allow_html=True)'''
     
     ##render each individual component
     _set_custom_css()
-
-    _render_header()
     
-    _render_time_toggle()
+    _render_inputs()
     
-    _render_prices()
+    _render_container()
     
-    _render_free_button()
+    _render_confirm()
     
-    _render_paid_button()
-
     
 # Helper Methods 
 
@@ -50,88 +44,140 @@ def _set_custom_css():
     with open("shap-agent/assets/styles/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
     
-def _render_header():
+def _render_container():
+    card_number = st.session_state.card_number
+    card_holder = st.session_state.card_holder
+    expires = st.session_state.expires
+    
     st.markdown("""
-    <div class="price-header">
-        <h1>Plans and Pricing</h1>
-        <p>Choose a plan tailored to your needs</p>
+    <div class="payment-body">
+        <div class="payment-container">
+            <div>
+                <svg
+                    id="visual"
+                    viewBox="0 0 900 600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlnsXlink="http://www.w3.org/1999/xlink"
+                    version="1.1"
+                    class="card-svg"
+                    preserveAspectRatio="none"
+                >
+                    <rect
+                        x="0"
+                        y="0"
+                        width="900"
+                        height="600"
+                        fill="#5457CD"
+                    ></rect>
+                    <path
+                        d="M0 400L30 386.5C60 373 120 346 180 334.8C240 323.7 300 328.3 360 345.2C420 362 480 391 540 392C600 393 660 366 720 355.2C780 344.3 840 349.7 870 352.3L900 355L900 601L870 601C840 601 780 601 720 601C660 601 600 601 540 601C480 601 420 601 360 601C300 601 240 601 180 601C120 601 60 601 30 601L0 601Z"
+                        fill="#6366F1"
+                        strokeLinecap="round"
+                        strokeLinejoin="miter"
+                   ></path>
+                </svg>
+                <div class="card-chip"></div>
+                <div class="card-info">
+                    <p class="card-number">
+                        <span>&nbsp;""" + card_number[0:4] + """</span>
+                        <span>""" + card_number[4:8] + """</span>
+                        <span>""" + card_number[8:12] + """</span>
+                        <span>""" + card_number[12:16] + """</span>
+                    </p>
+                    <div class="card-labels">
+                        <p> Card Holder</p>
+                        <p> Expires </p>
+                    </div>
+                    <div class="card-values">
+                        <strong>""" + card_holder + """</strong>
+                        <strong>""" + expires + """</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
     
-def _render_time_toggle():
-    st.markdown('<span id="button-after7"></span>', unsafe_allow_html=True)
-    toggle = st.toggle("")
-    
-    if toggle: 
-        st.session_state.price = "79.99"
-        st.session_state.time = "year"
-    else:
-        st.session_state.price = "12.99"
-        st.session_state.time = "month"
-    
-    st.markdown('<span id="div-after1"></span>', unsafe_allow_html=True)
-    st.markdown('''
-    <div class="price-toggle-labels">
-        <div class="toggle-label-1">Monthly</div>
-        <div class="toggle-label-2">Yearly</div>
-    </div>
-    ''', unsafe_allow_html=True)
+def _render_inputs():
+        
+    col1, col2, col3 = st.columns([4, 5, 3])
+    with col2:
+        st.markdown('<span id="input-after1"></span>', unsafe_allow_html=True)
+        st.session_state.card_number = st.text_input("Card Number", max_chars=16)
+                
+        st.markdown('<span id="input-after2"></span>', unsafe_allow_html=True)
+        st.session_state.card_holder = st.text_input("Card Holder:")
+        
+        st.markdown('<span id="input-after3"></span>', unsafe_allow_html=True)
+        st.session_state.cvv = st.text_input("CVV:", type="password", max_chars=3)
+        
+        months = [f"{i:02d}" for i in range(1, 13)]
+        years = [str(y) for y in range(datetime.now().year, datetime.now().year + 10)]
+        
+        st.markdown('<span id="input-after4"></span>', unsafe_allow_html=True)
+        expire_month = st.selectbox("Expires On:", months, index=datetime.now().month - 1)
 
-def _render_prices():
-# HTML price container
-    price = st.session_state.price
-    selectedTime = st.session_state.time
+        st.markdown('<span id="input-after5"></span>', unsafe_allow_html=True)
+        expire_year = st.selectbox(" ", years)
+        
+        st.session_state.expires = f"{expire_month}/{expire_year[2:4]}"
+        
+def _render_confirm():
+    col1, col2, col3 = st.columns([4, 5, 3])
+    with col2:
+        st.markdown('<span id="button-after9"></span>', unsafe_allow_html=True)
+        if st.button("Actviate Premium", key="toggle_button"):
+            if verify_input():
+                add_subscription(st.session_state.time)
+                st.session_state.page = "home"
+                st.rerun()
+            else:
+                show_error()
+            
+def verify_input():
+    card_number = st.session_state.card_number
+    card_holder = st.session_state.card_holder
+    cvv = st.session_state.cvv
+    valid = True
+    error = ""
     
-    st.markdown('''
-    <div class="price-root">
-        <div class="price-container1">
-            <p class="price-title">Standard</p>
-            <p class="price-cost">Free</p>
-            <div class="price-line1"></div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star1" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text1">Three <span> daily explanations</span></p>
-            </div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star1" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text1"><span>Predefined </span>models</p>
-            </div>
-        </div>
-        <div class="price-container2">
-            <p class="price-title">Premium</p>
-            <p class="price-cost">$''' + str(price) + '''<span> / ''' + selectedTime + '''</span></p>
-            <div class="price-line2"></div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star2" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text2">Unlimited <span>explanations</span></p>
-            </div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star2" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text2"><span>Upload </span>your own models</p>
-            </div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star2" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text2">Download <span>reports</span></p>
-            </div>
-            <div class="price-list-div">
-                <?xml version="1.0" encoding="utf-8"?><svg class="price-star2" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 122.88 122.88" style="enable-background:new 0 0 122.88 122.88" xml:space="preserve"><style type="text/css">.st0{fill-rule:evenodd;clip-rule:evenodd;}</style><g><path class="st0" d="M62.43,122.88h-1.98c0-16.15-6.04-30.27-18.11-42.34C30.27,68.47,16.16,62.43,0,62.43v-1.98 c16.16,0,30.27-6.04,42.34-18.14C54.41,30.21,60.45,16.1,60.45,0h1.98c0,16.15,6.04,30.27,18.11,42.34 c12.07,12.07,26.18,18.11,42.34,18.11v1.98c-16.15,0-30.27,6.04-42.34,18.11C68.47,92.61,62.43,106.72,62.43,122.88L62.43,122.88z"/></g></svg>
-                <p class="price-text2"><span>Advanced </span>explanations</p>
-            </div>
-        </div>
+    if not card_number or card_number == "":
+        error = "Card number cannot be empty."
+        valid = False
+    
+    if not card_number.isdigit():
+        error = "Card number must contain only numbers."
+        valid = False
+
+    elif len(card_number) != 16:
+        error = "Card number must be exactly 16 digits."
+        valid = False
+        
+    elif not card_holder or card_holder == "":
+        error = "Card holder cannot be empty."
+        valid = False
+        
+    elif not cvv or cvv == "":
+        error = "CVV cannot be empty."
+        valid = False
+
+    elif not cvv.isdigit():
+        error = "CVV must contain only numbers."
+        valid = False
+
+    elif len(cvv) != 3:
+        error = "CVV must be exactly 3 digits."
+        valid = False
+
+        
+    if valid == False:
+        st.session_state.error = error
+        
+    return valid
+
+def show_error():
+    st.markdown("""
+    <div class="error-div">
+       <p>""" + st.session_state.error +"""</p>
     </div>
-    ''', unsafe_allow_html=True)
-    
-def _render_free_button():
-    st.markdown('<span id="button-after5"></span>', unsafe_allow_html=True)
-    if st.button("Get started", key="free_button"):
-        st.session_state.page = "home"
-        st.rerun()
-        
-def _render_paid_button():
-    st.markdown('<span id="button-after6"></span>', unsafe_allow_html=True)
-    if st.button("Get started", key="paid_button"):
-        add_subscription(st.session_state.time)
-        st.session_state.page = "home"
-        st.session_state.paid = True
-        st.rerun()
-        
+    """, unsafe_allow_html=True)
