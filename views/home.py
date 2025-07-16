@@ -29,6 +29,14 @@ def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
 
     set_fade_animation()
+
+    if st.session_state.get('paid', False):
+        st.markdown("""
+            <div style="background-color: #198754; color: white; padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                ✅ You're using the <strong>Premium</strong> version of SHAP-Agent!
+            </div>
+        """, unsafe_allow_html=True)
+
     #hide dev toolbar
     #'''
     st.markdown("""
@@ -252,23 +260,18 @@ def home_view():
                 <button class="disabled-button" style="width: 100%" disabled> Explain my model </button>
             """, unsafe_allow_html=True)
             st.info("🔒  Daily limit reached on the free plan. Upgrade for unlimited use.")
+
+def _check_ollama():
+    with st.spinner("Checking Ollama service..."):
+        if not ShapAgent.check_ollama_alive():
+            st.error("⚠️ Ollama is not running. Please run `ollama run mistral`")
+            st.stop()
+
 # UI elements
 
 def _set_custom_css():
     with open("shap-agent/assets/styles/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-def _render_toggle_button():
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        if st.button("⬅ Back", key="back_button"):
-            st.session_state.page = "mode_selector"
-            st.rerun()
-
-    with col2:
-        if st.button("💎 Upgrade to Premium", key="toggle_button"):
-            st.session_state.page = "plans"
-            st.rerun()
 
 def _render_header():
     st.title("💡 SHAP-Agent: AI Model Explanation")
@@ -290,8 +293,59 @@ def _render_sidebar():
         - Advanced XAI report
         """)
 
-def _check_ollama():
-    with st.spinner("Checking Ollama service..."):
-        if not ShapAgent.check_ollama_alive():
-            st.error("⚠️ Ollama is not running. Please run `ollama run mistral`")
-            st.stop()
+def _render_toggle_button():
+    st.markdown("""
+    <style>
+    .top-buttons-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .back-button, .premium-button {
+        padding: 0.5rem 1rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .back-button {
+        background-color: #6c757d; /* gris */
+        color: white;
+    }
+
+    .premium-button {
+        background-color: #6f42c1;
+        color: white;
+    }
+
+    .back-button:hover {
+        background-color: #5a6268;
+    }
+
+    .premium-button:hover {
+        background-color: #5a32a3;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="top-buttons-container">
+        <form action="#" method="post">
+            <button class="back-button" onclick="window.location.reload()">⬅ Back</button>
+        </form>
+        <form action="#" method="post">
+            <button class="premium-button" onclick="window.location.reload()">💎 Upgrade to Premium</button>
+        </form>
+    </div>
+    """, unsafe_allow_html=True)
+
+    if st.session_state.get("button_click") == "back":
+        st.session_state.page = "mode_selector"
+        st.rerun()
+
+    elif st.session_state.get("button_click") == "premium":
+        st.session_state.page = "plans"
+        st.rerun()
