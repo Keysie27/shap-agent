@@ -2,11 +2,13 @@ import re
 import streamlit as st
 import streamlit.components.v1 as components
 from db.firebase import add_subscription
+from utils.animations import set_fade_animation
 
 pdf_bytes = None
 
 def plans_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
+    set_fade_animation()
     
     if "price" not in st.session_state:
       st.session_state.price = "12.99"
@@ -126,13 +128,9 @@ def _render_free_button():
     if st.button("Get started", key="free_button"):
         st.session_state.page = "home"
         st.rerun()
-        
+
 def _render_paid_button():
     st.markdown('<span id="button-after6"></span>', unsafe_allow_html=True)
     if st.button("Upgrade to Premium", key="paid_button"):
         st.session_state.page = "payment"
         st.rerun()
-        
-            
-
-        

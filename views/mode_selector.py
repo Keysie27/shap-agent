@@ -1,7 +1,9 @@
 import streamlit as st
+from utils.animations import set_fade_animation
 
 def mode_selector_view():
     st.set_page_config(page_title="SHAP-Agent | Choose Mode", layout="centered")
+    set_fade_animation()
     _set_custom_css()
 
     st.markdown("<h1 style='text-align: center;'>💡 Welcome to <span style='color:#6f42c1;'>SHAP-Agent</span>!</h1>", unsafe_allow_html=True)

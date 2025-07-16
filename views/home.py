@@ -14,6 +14,7 @@ from services.pdf_generator import create_shap_report_pdf
 from shap_tools.explainer import ShapExplainer
 from shap_tools.visualizations import ShapVisualizer
 from agent.prompts import ShapPrompts
+from utils.animations import set_fade_animation
 
 # Model registry
 MODEL_REGISTRY = {
@@ -26,7 +27,8 @@ MODEL_REGISTRY = {
 
 def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
-    
+
+    set_fade_animation()
     #hide dev toolbar
     #'''
     st.markdown("""

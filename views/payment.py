@@ -2,11 +2,12 @@ import re
 import streamlit as st
 import streamlit.components.v1 as components
 from db.firebase import add_subscription
+from utils.animations import set_fade_animation
 from datetime import datetime
 
 def payment_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
-    
+    set_fade_animation()
     if "card_number" not in st.session_state:
         st.session_state.card_number = ""
     
