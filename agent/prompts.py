@@ -49,9 +49,11 @@ class ShapPrompts:
 
     @staticmethod
     def get_advanced_analysis_prompt(model_name, shap_values, data, top_n=10):
-        """Prompt for premium users: deeper explanation with technical and business insights"""
-        mean_shap = np.abs(shap_values).mean(axis=0)
+        """Prompt for premium users: deeper explanation with technical and business insights and sample cases"""
+        import numpy as np
+        import pandas as pd
 
+        mean_shap = np.abs(shap_values).mean(axis=0)
         if len(mean_shap.shape) > 1:
             mean_shap = mean_shap.mean(axis=0)
 
@@ -61,41 +63,55 @@ class ShapPrompts:
         }).sort_values('Importance', ascending=False).head(top_n)
 
         feature_info = "\n".join(
-            f"- **{row['Feature']}** (SHAP importance: {row['Importance']:.4f})" 
+            f"- **{row['Feature']}** (SHAP importance: {row['Importance']:.4f})"
             for _, row in importance_df.iterrows()
         )
 
+        # Generate synthetic cases
+        sample_cases = ""
+        for i in range(min(2, len(data))):  # max 2 examples
+            row = data.iloc[i]
+            row_info = ", ".join(
+                f"{col}={row[col]}" for col in data.columns[:5]  # show only first 5 columns
+            )
+            sample_cases += f"- For a user with {row_info}, the model might predict a similar outcome due to feature weights.\n"
+
         return f"""
-        You are a senior data scientist explaining model behavior and technical insights to a team of product managers, analysts, and engineers.
+    You are a senior data scientist explaining model behavior and technical insights to a team of product managers, analysts, and engineers.
 
-        Model Type: **{model_name}**  
-        Dataset Size: **{data.shape[0]} rows × {data.shape[1]} features**  
-        Top {top_n} Features by SHAP Importance:  
-        {feature_info}
+    Model Type: **{model_name}**  
+    Dataset Size: **{data.shape[0]} rows × {data.shape[1]} features**  
+    Top {top_n} Features by SHAP Importance:  
+    {feature_info}
 
-        **Please follow this structure:**
+    **Please follow this structure:**
 
-        **1. Executive Summary**  
-        Brief sentence on which features drive predictions and whether results are aligned with expectations.
+    **1. Executive Summary**  
+    Summarize which features most influence the predictions. Clarify whether these results align with domain expectations and any surprises.
 
-        **2. Feature Interpretations**  
-        For the top 3–5 features:
-        - What behavior do they capture?
-        - Are they positively or negatively associated?
-        - Any interactions or conditional effects?
+    **2. Feature Interpretations**  
+    For the top 3–5 features:
+    - What user behavior or pattern does each represent?
+    - Are they positively or negatively correlated with the output?
+    - Do they show threshold effects or non-linear behavior?
+    - Are there clear interactions with other features?
 
-        **3. Unexpected Patterns**  
-        - Any surprising features?
-        - Missing expected signals?
-        - Nonlinear or unstable relationships?
+    **3. Unexpected Patterns**  
+    - Are there features with unexpectedly high or low influence?
+    - Are any expected drivers missing?
+    - Mention unstable, volatile or counterintuitive effects.
 
-        **4. Recommendations**  
-        - 2 ideas to improve data quality or add features
-        - 2 ideas to use this model in business operations
-        - 1 idea for continuous monitoring or retraining
+    **4. Recommendations**  
+    - Suggest 2 improvements to input data or data engineering (e.g., add features, fix skew).
+    - Propose 2 business use cases for this model (e.g., early alerts, prioritization).
+    - Describe 1 suggestion for model monitoring, drift detection or retraining frequency.
 
-        🧠 Use semi-technical language but remain clear.  
-        ✍️ Prefer bullet points or concise blocks.  
-        🎯 Stay under 350 words. No markdown beyond bold and numbered sections.
-        Note: Include examples with numbers and statistics where relevant.
-        """
+    **5. Example-Based Interpretability**  
+    Provide up to 2 brief examples from the dataset showing how the model interprets real users:
+    {sample_cases}
+
+    🧠 Use semi-technical language but remain clear and structured.  
+    ✍️ Use bullet points or short blocks.  
+    🎯 Stay under 400 words. Use numbers and illustrative examples.
+    Avoid using markdown except for section titles and bold text.
+    """
