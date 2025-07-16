@@ -294,58 +294,46 @@ def _render_sidebar():
         """)
 
 def _render_toggle_button():
-    st.markdown("""
-    <style>
-    .top-buttons-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
+    col1, col2 = st.columns([1, 13])
 
-    .back-button, .premium-button {
-        padding: 0.5rem 1rem;
-        font-weight: bold;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-    }
+    with col1:
+        st.markdown("""
+            <style>
+            div.stButton > button.back-btn {
+                background-color: #6c757d !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.back-btn:hover {
+                background-color: #5a6268 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("⬅ Back", key="back_btn", help="Go to mode selector"):
+            st.session_state.page = "mode_selector"
+            st.rerun()
 
-    .back-button {
-        background-color: #6c757d; /* gris */
-        color: white;
-    }
-
-    .premium-button {
-        background-color: #6f42c1;
-        color: white;
-    }
-
-    .back-button:hover {
-        background-color: #5a6268;
-    }
-
-    .premium-button:hover {
-        background-color: #5a32a3;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-    st.markdown("""
-    <div class="top-buttons-container">
-        <form action="#" method="post">
-            <button class="back-button" onclick="window.location.reload()">⬅ Back</button>
-        </form>
-        <form action="#" method="post">
-            <button class="premium-button" onclick="window.location.reload()">💎 Upgrade to Premium</button>
-        </form>
-    </div>
-    """, unsafe_allow_html=True)
-
-    if st.session_state.get("button_click") == "back":
-        st.session_state.page = "mode_selector"
-        st.rerun()
-
-    elif st.session_state.get("button_click") == "premium":
-        st.session_state.page = "plans"
-        st.rerun()
+    with col2:
+        st.markdown("""
+            <style>
+            div.stButton > button.premium-btn {
+                background-color: #6f42c1 !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.premium-btn:hover {
+                background-color: #5a32a3 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("💎 Upgrade to Premium", key="premium_btn", help="See premium plans"):
+            st.session_state.page = "plans"
+            st.rerun()
