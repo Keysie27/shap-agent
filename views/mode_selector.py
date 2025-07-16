@@ -50,7 +50,6 @@ def mode_selector_view():
 
     st.markdown("<br><br>", unsafe_allow_html=True)
     _render_toggle_button()
-    st.write("Current page:", st.session_state.get("page"))
 
 
 def _render_toggle_button():
@@ -64,7 +63,6 @@ def _render_toggle_button():
 def _select_mode(mode: str):
     st.session_state.explanation_mode = mode
     st.session_state.page = "home"
-    st.rerun()
 
 
 def _set_custom_css():
