@@ -205,7 +205,7 @@ def _render_toggle_button():
             }
             </style>
         """, unsafe_allow_html=True)
-        if st.button("⬅ Back", key="back_btn", help="Go to mode selector"):
+        if st.button("⬅ Back", key="back_btn", help="Go back"):
             st.session_state.page = "plans"
             st.rerun()
 
@@ -226,6 +226,6 @@ def _render_toggle_button():
             }
             </style>
         """, unsafe_allow_html=True)
-        if st.button("🏠 Home", key="premium_btn", help="See premium plans"):
+        if st.button("🏠 Home", key="premium_btn", help="Go to home page"):
             st.session_state.page = "mode_selector"
             st.rerun()
