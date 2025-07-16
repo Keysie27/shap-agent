@@ -260,7 +260,7 @@ def _set_custom_css():
 
 def _render_toggle_button():
     st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
-    if st.button("💎 Get Premium", key="toggle_button"):
+    if st.button("💎 Upgrade to Premium", key="toggle_button"):
         st.session_state.page = "plans"
         st.rerun()
 

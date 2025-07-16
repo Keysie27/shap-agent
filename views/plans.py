@@ -9,7 +9,7 @@ pdf_bytes = None
 def plans_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
     set_fade_animation()
-    
+
     if "price" not in st.session_state:
       st.session_state.price = "12.99"
       st.session_state.time = "month"
