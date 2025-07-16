@@ -195,7 +195,13 @@ def home_view():
                 try:
                     with st.spinner("✨ Generating AI explanation..."):
                         agent = ShapAgent()
-                        prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
+                        is_advanced = st.session_state.get("explanation_mode") == "advanced"
+
+                        if is_advanced:
+                            prompt = ShapPrompts.get_advanced_analysis_prompt(selected_display_name, shap_values, X_numeric)
+                        else:
+                            prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
+
                         explanation = agent.generate_explanation(prompt, X_numeric.shape)
                         st.session_state['explanation'] = explanation
                         st.markdown(explanation)

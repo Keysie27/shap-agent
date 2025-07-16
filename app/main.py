@@ -1,6 +1,7 @@
 from views.home import home_view
 from views.plans import plans_view
 from views.payment import payment_view
+from views.mode_selector import mode_selector_view
 from db.firebase import verify_key, get_subscription_by_key
 import streamlit as st
 
@@ -14,13 +15,15 @@ def main():
     st.session_state.paid = valid
         
     #check which view to load
-    
-    if "page" not in st.session_state or st.session_state.page == "home":
+    if "explanation_mode" not in st.session_state:
+        mode_selector_view()
+
+    elif "page" not in st.session_state or st.session_state.page == "home":
         home_view()
-    
+
     elif st.session_state.page == "plans":
         plans_view()
-        
+
     elif st.session_state.page == "payment":
         payment_view()
 
