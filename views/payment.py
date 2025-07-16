@@ -127,7 +127,7 @@ def _render_confirm():
     col1, col2, col3 = st.columns([4, 5, 3])
     with col2:
         st.markdown('<span id="button-after9"></span>', unsafe_allow_html=True)
-        if st.button("Actviate Premium", key="toggle_button"):
+        if st.button("Activate Premium", key="toggle_button"):
             if verify_input():
                 add_subscription(st.session_state.time)
                 st.session_state.page = "home"

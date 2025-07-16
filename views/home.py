@@ -163,7 +163,7 @@ def home_view():
                             ax.tick_params(axis='x', colors='white')
                             ax.tick_params(axis='y', colors='white')
                             ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
-                            ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
+                            ax.set_ylabel("Feature", fontsize=16, color='white', labelpad=10)
                             for bar in ax.patches:
                                 bar.set_color("#8EA0F0")
     
