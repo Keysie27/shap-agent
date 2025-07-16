@@ -2,12 +2,14 @@ import re
 import streamlit as st
 import streamlit.components.v1 as components
 from db.firebase import add_subscription
+from utils.animations import set_fade_animation
 
 pdf_bytes = None
 
 def plans_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
-    
+    set_fade_animation()
+
     if "price" not in st.session_state:
       st.session_state.price = "12.99"
       st.session_state.time = "month"
@@ -32,6 +34,8 @@ def plans_view():
     
     ##render each individual component
     _set_custom_css()
+
+    _render_toggle_button()
 
     _render_header()
     
@@ -126,13 +130,54 @@ def _render_free_button():
     if st.button("Get started", key="free_button"):
         st.session_state.page = "home"
         st.rerun()
-        
+
 def _render_paid_button():
     st.markdown('<span id="button-after6"></span>', unsafe_allow_html=True)
     if st.button("Upgrade to Premium", key="paid_button"):
         st.session_state.page = "payment"
         st.rerun()
-        
-            
 
-        
+def _render_toggle_button():
+    col1, col2 = st.columns([1, 13])
+
+    with col1:
+        st.markdown("""
+            <style>
+            div.stButton > button.back-btn {
+                background-color: #6c757d !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.back-btn:hover {
+                background-color: #5a6268 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("⬅ Back", key="back_btn", help="Go back"):
+            st.session_state.page = "home"
+            st.rerun()
+
+    with col2:
+        st.markdown("""
+            <style>
+            div.stButton > button.premium-btn {
+                background-color: #6f42c1 !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.premium-btn:hover {
+                background-color: #5a32a3 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("🏠 Home", key="premium_btn", help="Go to home page"):
+            st.session_state.page = "mode_selector"
+            st.rerun()

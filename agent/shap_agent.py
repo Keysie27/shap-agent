@@ -28,18 +28,16 @@ class ShapAgent:
         if self.provider != "ollama":
             return "⚠️ Agent provider not supported. Check your .env file"
 
-        # Use your original prompt format that worked
         prompt = f"""
-You are an AI assistant that explains how machine learning models work.
+You are an explicable AI (XAI) agent that explains how machine learning models work.
 This dataset has {data_shape[0]} rows and {data_shape[1]} features.
 
-Given the SHAP global summary below, explain in simple English what the model is focusing on and why.
+Given the SHAP global summary below, explain in English what the model is focusing on and why.
 
 SHAP Summary:
 {summary_text}
 """
         try:
-            # Use the simpler request format that worked before
             response = requests.post(
                 f"{self.base_url}/api/generate",
                 json={
@@ -50,7 +48,6 @@ SHAP Summary:
                 timeout=self.timeout
             )
 
-            # Handle the response format you were using successfully
             if response.status_code == 200:
                 result = response.json()
                 return result.get("response", "⚠️ Error: No response from Ollama.")
@@ -68,7 +65,6 @@ SHAP Summary:
         except Exception as e:
             return f"⚠️ Unexpected error: {str(e)}"
 
-    # Backward compatibility with your old function names
     @staticmethod
     def explain_with_agent(summary_text: str, data_shape: tuple) -> str:
         agent = ShapAgent()

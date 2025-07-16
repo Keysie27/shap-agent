@@ -14,6 +14,7 @@ from services.pdf_generator import create_shap_report_pdf
 from shap_tools.explainer import ShapExplainer
 from shap_tools.visualizations import ShapVisualizer
 from agent.prompts import ShapPrompts
+from utils.animations import set_fade_animation
 
 # Model registry
 MODEL_REGISTRY = {
@@ -26,7 +27,16 @@ MODEL_REGISTRY = {
 
 def home_view():
     st.set_page_config(page_title="SHAP-Agent", layout="wide")
-    
+
+    set_fade_animation()
+
+    if st.session_state.get('paid', False):
+        st.markdown("""
+            <div style="background-color: #198754; color: white; padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                ✅ You're using the <strong>Premium</strong> version of SHAP-Agent!
+            </div>
+        """, unsafe_allow_html=True)
+
     #hide dev toolbar
     #'''
     st.markdown("""
@@ -94,7 +104,7 @@ def home_view():
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("❗Select the target column:", data.columns)
 
-        st.subheader("3. Enter your test data:")
+        st.subheader("3. Enter data to test your model:")
         test_input_data = {}
         input_columns = [col for col in data.columns if col != target_column]
         for col in input_columns:
@@ -161,7 +171,7 @@ def home_view():
                             ax.tick_params(axis='x', colors='white')
                             ax.tick_params(axis='y', colors='white')
                             ax.set_xlabel("Impact in the model", fontsize=16, color='white', labelpad=10)
-                            ax.set_ylabel("Features", fontsize=16, color='white', labelpad=10)
+                            ax.set_ylabel("Feature", fontsize=16, color='white', labelpad=10)
                             for bar in ax.patches:
                                 bar.set_color("#8EA0F0")
     
@@ -195,7 +205,13 @@ def home_view():
                 try:
                     with st.spinner("✨ Generating AI explanation..."):
                         agent = ShapAgent()
-                        prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
+                        is_advanced = st.session_state.get("explanation_mode") == "advanced"
+
+                        if is_advanced:
+                            prompt = ShapPrompts.get_advanced_analysis_prompt(selected_display_name, shap_values, X_numeric)
+                        else:
+                            prompt = ShapPrompts.get_analysis_prompt(selected_display_name, shap_values, X_numeric)
+
                         explanation = agent.generate_explanation(prompt, X_numeric.shape)
                         st.session_state['explanation'] = explanation
                         st.markdown(explanation)
@@ -244,21 +260,38 @@ def home_view():
                 <button class="disabled-button" style="width: 100%" disabled> Explain my model </button>
             """, unsafe_allow_html=True)
             st.info("🔒  Daily limit reached on the free plan. Upgrade for unlimited use.")
+
+def _check_ollama():
+    with st.spinner("Checking Ollama service..."):
+        if not ShapAgent.check_ollama_alive():
+            st.error("⚠️ Ollama is not running. Please run `ollama run mistral`")
+            st.stop()
+
 # UI elements
 
 def _set_custom_css():
     with open("shap-agent/assets/styles/styles.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-def _render_toggle_button():
-    st.markdown('<span id="button-after"></span>', unsafe_allow_html=True)
-    if st.button("💎 Get Premium", key="toggle_button"):
-        st.session_state.page = "plans"
-        st.rerun()
-
 def _render_header():
     st.title("💡 SHAP-Agent: AI Model Explanation")
     st.markdown("Understand how your ML model makes decisions!")
+
+    # Show selected mode
+    mode = st.session_state.get("explanation_mode", "standard")
+
+    if mode == "advanced":
+        st.markdown("""
+            <div style="border: 2px solid #6f42c1; color: white; padding: 0.7rem 1rem; border-radius: 10px; margin-top: 0.5rem; margin-bottom: 1.5rem; font-size: 16px;">
+                🚀 <strong>Pro Insights (Advanced)</strong> mode is active.
+            </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+            <div style="border: 2px solid #6f42c1; color: white; padding: 0.7rem 1rem; border-radius: 10px; margin-top: 0.5rem; margin-bottom: 1.5rem; font-size: 16px;">
+                🧠 <strong>Smart Insights (Standard)</strong> mode is active.
+            </div>
+        """, unsafe_allow_html=True)
 
 def _render_sidebar():
     with st.sidebar:
@@ -267,17 +300,56 @@ def _render_sidebar():
         1. Choose a model
         2. Upload CSV with target column
         3. Enter test data
-        4. Click '✨ Explain my model ✨'
+        4. Click on ✨Explain my model✨
         ---
-        Output includes:
+        ### Output includes:
         - Feature impact analysis
-        - SHAP visualizations
+        - Visualizations
         - AI-powered explanation
         - Advanced XAI report
         """)
 
-def _check_ollama():
-    with st.spinner("Checking Ollama service..."):
-        if not ShapAgent.check_ollama_alive():
-            st.error("⚠️ Ollama is not running. Please run `ollama run mistral`")
-            st.stop()
+def _render_toggle_button():
+    col1, col2 = st.columns([1, 13])
+
+    with col1:
+        st.markdown("""
+            <style>
+            div.stButton > button.back-btn {
+                background-color: #6c757d !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.back-btn:hover {
+                background-color: #5a6268 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("⬅ Back", key="back_btn", help="Go to home page"):
+            st.session_state.page = "mode_selector"
+            st.rerun()
+
+    with col2:
+        st.markdown("""
+            <style>
+            div.stButton > button.premium-btn {
+                background-color: #6f42c1 !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.premium-btn:hover {
+                background-color: #5a32a3 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("💎 Upgrade to Premium", key="premium_btn", help="Go to plans"):
+            st.session_state.page = "plans"
+            st.rerun()
