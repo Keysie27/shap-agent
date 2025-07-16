@@ -35,6 +35,8 @@ def plans_view():
     ##render each individual component
     _set_custom_css()
 
+    _render_toggle_button()
+
     _render_header()
     
     _render_time_toggle()
@@ -134,3 +136,48 @@ def _render_paid_button():
     if st.button("Upgrade to Premium", key="paid_button"):
         st.session_state.page = "payment"
         st.rerun()
+
+def _render_toggle_button():
+    col1, col2 = st.columns([1, 13])
+
+    with col1:
+        st.markdown("""
+            <style>
+            div.stButton > button.back-btn {
+                background-color: #6c757d !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.back-btn:hover {
+                background-color: #5a6268 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("⬅ Back", key="back_btn", help="Go to mode selector"):
+            st.session_state.page = "home"
+            st.rerun()
+
+    with col2:
+        st.markdown("""
+            <style>
+            div.stButton > button.premium-btn {
+                background-color: #6f42c1 !important;
+                color: white !important;
+                font-weight: bold;
+                border: none;
+                border-radius: 8px;
+                padding: 0.4rem 1rem;
+                margin-bottom: 1rem;
+            }
+            div.stButton > button.premium-btn:hover {
+                background-color: #5a32a3 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
+        if st.button("🏠 Home", key="premium_btn", help="See premium plans"):
+            st.session_state.page = "mode_selector"
+            st.rerun()
