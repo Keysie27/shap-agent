@@ -3,17 +3,8 @@ from datetime import datetime, timezone
 import json
 import os
 
-def check_subscription_status(key):
-    subscription_data = get_subscription_by_key(key)
-    expDate = subscription_data.get("expDate")
-    now = datetime.now(timezone.utc)
-    
-    if expDate is None:
-        return None
-    else:
-        return now < expDate
-
 json_path = 'shap-agent/db/subscription_usage.json'
+
 def load_data():
     if not os.path.exists(json_path):
         return {

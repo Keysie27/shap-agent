@@ -26,37 +26,21 @@ MODEL_REGISTRY = {
 }
 
 def home_view():
-    st.set_page_config(page_title="SHAP-Agent", layout="wide")
+    st.set_page_config(page_title="Whitebox XAI Agent", layout="wide")
 
     set_fade_animation()
+
+    _render_toggle_button()
 
     if st.session_state.get('paid', False):
         st.markdown("""
             <div style="background-color: #198754; color: white; padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                ✅ You're using the <strong>Premium</strong> version of SHAP-Agent!
+                ✅ You're using the <strong>Premium</strong> version of Whitebox XAI Agent!
             </div>
         """, unsafe_allow_html=True)
 
-    #hide dev toolbar
-    #'''
-    st.markdown("""
-    <style>
-    [data-testid="stToolbar"] {
-        display: none !important;
-    }
-
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-
-    .main .block-container {
-        padding-top: 1rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)#'''
-    
-    _render_toggle_button()
-    
+    _hide_toolbar()
+        
     _set_custom_css()
     
     _render_header()
@@ -274,7 +258,7 @@ def _set_custom_css():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 def _render_header():
-    st.title("💡 SHAP-Agent: AI Model Explanation")
+    st.title("💡 WhiteBox XAI Agent: AI Model Explanation")
     st.markdown("Understand how your ML model makes decisions!")
 
     # Show selected mode
@@ -310,46 +294,33 @@ def _render_sidebar():
         """)
 
 def _render_toggle_button():
-    col1, col2 = st.columns([1, 13])
+    col1, col2 = st.columns([2, 16])
 
     with col1:
-        st.markdown("""
-            <style>
-            div.stButton > button.back-btn {
-                background-color: #6c757d !important;
-                color: white !important;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                padding: 0.4rem 1rem;
-                margin-bottom: 1rem;
-            }
-            div.stButton > button.back-btn:hover {
-                background-color: #5a6268 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        if st.button("⬅ Back", key="back_btn", help="Go to home page"):
+        st.markdown('<span id="button-after11"></span>', unsafe_allow_html=True)
+        if st.button("⬅ Welcome", key="back_btn", help="Go to welcome page"):
             st.session_state.page = "mode_selector"
             st.rerun()
 
     with col2:
-        st.markdown("""
-            <style>
-            div.stButton > button.premium-btn {
-                background-color: #6f42c1 !important;
-                color: white !important;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                padding: 0.4rem 1rem;
-                margin-bottom: 1rem;
-            }
-            div.stButton > button.premium-btn:hover {
-                background-color: #5a32a3 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        st.markdown('<span id="button-after11"></span>', unsafe_allow_html=True)
         if st.button("💎 Upgrade to Premium", key="premium_btn", help="Go to plans"):
             st.session_state.page = "plans"
             st.rerun()
+
+def _hide_toolbar():
+    st.markdown("""
+    <style>
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    .main .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)

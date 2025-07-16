@@ -119,10 +119,26 @@
     margin-top: -20px;
     color: white;
     transition: all 0.3s ease;
+    border: none;
 }
 
 .element-container:has(#button-after9)+div button:hover {
-    border: none;
+    transform: translateY(-2px);
+}
+
+.element-container:has(#button-after11)+div {
+    margin-top: -100px;
+}
+
+.element-container:has(#button-after11)+div button {
+    color: white !important;
+    border-color: darkgray;
+    transition: all 0.3s ease;
+}
+
+.element-container:has(#button-after11)+div button:hover {
+    border-color: darkgray;
+    background: #0C0D12;
     transform: translateY(-2px);
 }
 

@@ -15,9 +15,10 @@ def main():
 
     if "page" not in st.session_state:
         st.session_state.page = "mode_selector"
+
     if st.session_state.page == "plans":
         plans_view()
-    if st.session_state.page == "mode_selector":
+    elif st.session_state.page == "mode_selector":
         mode_selector_view()
     elif st.session_state.page == "payment":
         payment_view()

@@ -7,32 +7,15 @@ from utils.animations import set_fade_animation
 pdf_bytes = None
 
 def plans_view():
-    st.set_page_config(page_title="SHAP-Agent", layout="wide")
+    st.set_page_config(page_title="Whitebox XAI Agent", layout="wide")
     set_fade_animation()
 
     if "price" not in st.session_state:
       st.session_state.price = "12.99"
       st.session_state.time = "month"
 
-    #hide dev toolbar
-    #'''
-    st.markdown("""
-    <style>
-    [data-testid="stToolbar"] {
-        display: none !important;
-    }
-
-    [data-testid="stHeader"] {
-        display: none !important;
-    }
-
-    .main .block-container {
-        padding-top: 1rem;
-    }
-    </style>
-""", unsafe_allow_html=True)#'''
+    _hide_toolbar()
     
-    ##render each individual component
     _set_custom_css()
 
     _render_toggle_button()
@@ -138,46 +121,33 @@ def _render_paid_button():
         st.rerun()
 
 def _render_toggle_button():
-    col1, col2 = st.columns([1, 13])
+    col1, col2 = st.columns([2, 20])
 
     with col1:
-        st.markdown("""
-            <style>
-            div.stButton > button.back-btn {
-                background-color: #6c757d !important;
-                color: white !important;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                padding: 0.4rem 1rem;
-                margin-bottom: 1rem;
-            }
-            div.stButton > button.back-btn:hover {
-                background-color: #5a6268 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        if st.button("⬅ Back", key="back_btn", help="Go back"):
-            st.session_state.page = "home"
+        st.markdown('<span id="button-after11"></span>', unsafe_allow_html=True)
+        if st.button("⬅ Welcome", key="back_btn", help="Go to welcome page"):
+            st.session_state.page = "mode_selector"
             st.rerun()
 
     with col2:
-        st.markdown("""
-            <style>
-            div.stButton > button.premium-btn {
-                background-color: #6f42c1 !important;
-                color: white !important;
-                font-weight: bold;
-                border: none;
-                border-radius: 8px;
-                padding: 0.4rem 1rem;
-                margin-bottom: 1rem;
-            }
-            div.stButton > button.premium-btn:hover {
-                background-color: #5a32a3 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
+        st.markdown('<span id="button-after11"></span>', unsafe_allow_html=True)
         if st.button("🏠 Home", key="premium_btn", help="Go to home page"):
-            st.session_state.page = "mode_selector"
+            st.session_state.page = "home"
             st.rerun()
+
+def _hide_toolbar():
+    st.markdown("""
+    <style>
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    [data-testid="stHeader"] {
+        display: none !important;
+    }
+
+    .main .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)

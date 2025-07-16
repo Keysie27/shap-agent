@@ -2,11 +2,12 @@ import streamlit as st
 from utils.animations import set_fade_animation
 
 def mode_selector_view():
-    st.set_page_config(page_title="SHAP-Agent | Choose Mode", layout="centered")
+    st.set_page_config(page_title="Whitebox XAI Agent", layout="centered")
     set_fade_animation()
     _set_custom_css()
+    _hide_toolbar()
 
-    st.markdown("<h1 style='text-align: center;'>💡 Welcome to <span style='color:#6f42c1;'>SHAP-Agent</span>!</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center;'>💡 Welcome to <span style='color:#6f42c1;'>Whitebox XAI Agent</span>!</h1>", unsafe_allow_html=True)
     st.markdown("""
     <div style='text-align: center; font-size: 18px; padding-bottom: 1em;'>
         <strong>Choose how deeply you'd like to explore your model's behavior with AI explanations!</strong><br><br>
@@ -110,6 +111,23 @@ def _set_custom_css():
         padding-top: 0.5em;
         font-size: 15px;
         line-height: 1.7;
+    }
+
+    .main .block-container {
+        padding-top: 1rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def _hide_toolbar():
+    st.markdown("""
+    <style>
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+
+    [data-testid="stHeader"] {
+        display: none !important;
     }
 
     .main .block-container {
