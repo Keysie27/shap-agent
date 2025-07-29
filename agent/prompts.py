@@ -95,6 +95,8 @@ class ShapPrompts:
     - Are they positively or negatively correlated with the output?
     - Do they show threshold effects or non-linear behavior?
     - Are there clear interactions with other features?
+    - 📈 **Explain the SHAP value numerically**: indicate the average SHAP impact (e.g., +0.12 means the feature tends to increase prediction by 0.12 units).
+    - 🧮 **If possible, describe the formula or how the SHAP value is derived** for this feature in a given instance (e.g., model output = base_value + sum of SHAP values).
 
     **3. Observations** 
     - Are there features with unexpectedly high or low influence?
@@ -103,6 +105,7 @@ class ShapPrompts:
 
     **4. Actionable Tips**  
     - Suggest 2 improvements to input data or data engineering (e.g., add features, fix skew).
+    - Explain if the selected algorithm {model_name} is appropriate for the data type and distribution.
     - Provide up to 2 brief examples from the dataset showing how the model interprets real users:
     {sample_cases}
 

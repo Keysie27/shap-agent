@@ -83,18 +83,30 @@ def home_view():
 
     if data_file:
         data = pd.read_csv(data_file)
+
+        #sample data for pdf
+        sample_data_list = [data.columns.to_list()] + data.head(5).values.tolist()
+
         st.markdown(" 👀 Take a look at your data:")
         st.dataframe(data.head(3))
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("❗Select the target column:", data.columns)
 
         st.subheader("3. Enter data to test your model:")
-        test_input_data = {}
         input_columns = [col for col in data.columns if col != target_column]
-        for col in input_columns:
-            default_val = data[col].median() if np.issubdtype(data[col].dtype, np.number) else ""
-            test_input_data[col] = st.text_input(f"{col}", value=str(default_val))
-            
+
+        # Matrix for test input
+        default_row = {
+            col: data[col].median() if np.issubdtype(data[col].dtype, np.number) else data[col].mode().iloc[0]
+            for col in input_columns
+        }
+        test_input_df = pd.DataFrame([default_row])
+
+        st.markdown("✍️ Edit your test input values below:")
+        edited_test_input = st.data_editor(test_input_df, use_container_width=True, key="input_matrix")
+
+        true_label_input = st.text_input("🎯 Enter expected output:")
+
         update_field("date", datetime.now().date().isoformat())
 
         if st.session_state.paid or load_data()['count'] < 3:
@@ -123,11 +135,13 @@ def home_view():
                         model_module = importlib.import_module(f"models.sample_models.{module_name}")
                         model = model_module.train(X_numeric, y, **model_params)
 
-                        test_df = pd.DataFrame([test_input_data]).astype(str)
-                        test_df = pd.get_dummies(test_df)
+                        test_df = edited_test_input.copy()
                         test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
 
+                        waterfall_input = test_df
+
                         prediction = model.predict(test_df)[0]
+                        
                         if module_name == "linear_regression":
                             predicted_label = prediction
                         else:
@@ -135,12 +149,29 @@ def home_view():
 
                         st.write(f"🔮 **Model Prediction for Input:** `{predicted_label}`")
 
-                        explainer = ShapExplainer(model)
+                        if true_label_input:
+                            try:
+                                if module_name == "linear_regression":
+                                    true_val = float(true_label_input)
+                                    error = np.abs(true_val - prediction)
+                                    st.info(f"Absolute Error: **{error:.4f}**")
+                                else:
+                                    true_val = label_encoder.transform([true_label_input])[0]
+                                    is_correct = int(true_val == prediction)
+                                    acc = is_correct * 100
+                                    st.info(f"Accuracy: **{acc:.0f}%**")
+                            except Exception as e:
+                                st.warning(f"⚠️ Couldn't compute accuracy. Check if the input is valid: {e}")
+
+                        explainer = ShapExplainer(model, background_data=X_numeric)
+                        explainer.create_explainer()
+                        
                         shap_values = explainer.generate_shap_values(X_numeric)
                         test_shap_values = explainer.generate_shap_values(test_df)
 
                         visualizer = ShapVisualizer()
-                        plots = visualizer.create_all_plots(shap_values, X_numeric)
+                        plots = visualizer.create_all_plots(shap_values, X_numeric, test_shap_values, waterfall_input, feature_names=None, waterfall_base_value=0)
+
                         plt.style.use('dark_background')
                         if 'importance' in plots:
                             fig = plots['importance']
@@ -161,6 +192,8 @@ def home_view():
     
                         summary_base64 = get_img_base_64(plots['summary']) if 'summary' in plots else None
                         bar_base64 = get_img_base_64(plots['importance']) if 'importance' in plots else None
+                        waterfall_base64 = get_img_base_64(plots['waterfall'], "waterfall") if 'waterfall' in plots else None
+
 
                         st.session_state.update({
                             'model_name': selected_display_name,
@@ -173,7 +206,7 @@ def home_view():
 
                         tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
                         with tab1:
-                            st.pyplot(plots['importance'])
+                            st.pyplot(plots['importance']) if 'importance' in plots else None
                         with tab2:
                             shap_df = pd.DataFrame(
                                 shap_values[0] if len(shap_values.shape) == 3 else shap_values,
@@ -218,7 +251,10 @@ def home_view():
                         top_influencers_sentence=summary,
                         feature_analysis_points=top_features,
                         key_observations_points=observations,
-                        practical_recommendations=recommendations
+                        practical_recommendations=recommendations,
+                        sample_data=sample_data_list,
+                        shap_values=shap_df,
+                        waterfall_img_base64=waterfall_base64
                     )
                     
                     if st.session_state.loading == True:
