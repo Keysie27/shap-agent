@@ -91,14 +91,15 @@ def home_view():
         st.dataframe(data.head(3))
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("❗Select the target column:", data.columns)
+        true_label_input = st.text_input("✔️ Optional: Enter expected output (for error/accuracy calculation):")
 
         st.subheader("3. Enter data to test your model:")
         test_input_data = {}
         input_columns = [col for col in data.columns if col != target_column]
         for col in input_columns:
             default_val = data[col].median() if np.issubdtype(data[col].dtype, np.number) else ""
-            test_input_data[col] = st.text_input(f"{col}", value=str(default_val))
-            
+            test_input_data[col] = st.text_input(f"{col}", value=str(default_val), key=f"input_{col}")
+
         update_field("date", datetime.now().date().isoformat())
 
         if st.session_state.paid or load_data()['count'] < 3:
@@ -139,6 +140,9 @@ def home_view():
 
                         waterfall_input = test_df
 
+                        st.write("🧪 Test input dataframe (preprocessed):")
+                        st.dataframe(test_df)
+
                         prediction = model.predict(test_df)[0]
                         
                         if module_name == "linear_regression":
@@ -147,6 +151,20 @@ def home_view():
                             predicted_label = label_encoder.inverse_transform([prediction])[0]
 
                         st.write(f"🔮 **Model Prediction for Input:** `{predicted_label}`")
+
+                        if true_label_input:
+                            try:
+                                if module_name == "linear_regression":
+                                    true_val = float(true_label_input)
+                                    error = np.abs(true_val - prediction)
+                                    st.info(f"📏 Absolute Error: **{error:.4f}**")
+                                else:
+                                    true_val = label_encoder.transform([true_label_input])[0]
+                                    is_correct = int(true_val == prediction)
+                                    acc = is_correct * 100
+                                    st.info(f"🎯 Accuracy: **{acc:.0f}%**")
+                            except Exception as e:
+                                st.warning(f"⚠️ Couldn't compute accuracy. Check if the input is valid: {e}")
 
                         explainer = ShapExplainer(model, background_data=X_numeric)
                         explainer.create_explainer()
