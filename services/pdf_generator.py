@@ -65,7 +65,7 @@ def create_shap_report_pdf(
 
     # User Data
     story.append(Paragraph("Input Data", styles['Heading2']))
-    story.append(Paragraph("Below is a preview of the dataset provided by the user, showing the first five rows. This gives an overview of the features and their values fed into the model.", styles['BodyText']))
+    story.append(Paragraph("Below is a preview of the dataset provided by the user, showing the first five rows and six features. This gives an overview of the features and their values fed into the model.", styles['BodyText']))
     story.append(Spacer(1, 12))
 
     if sample_data:
