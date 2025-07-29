@@ -9,7 +9,7 @@ class ShapAgent:
     def __init__(self):
         self.provider = os.getenv("AGENT_PROVIDER", "ollama")
         self.model = os.getenv("OLLAMA_MODEL", "mistral")
-        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "300"))
+        self.timeout = int(os.getenv("OLLAMA_TIMEOUT", "200"))
         self.base_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
     @staticmethod

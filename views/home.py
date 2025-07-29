@@ -154,12 +154,12 @@ def home_view():
                                 if module_name == "linear_regression":
                                     true_val = float(true_label_input)
                                     error = np.abs(true_val - prediction)
-                                    st.info(f"📏 Absolute Error: **{error:.4f}**")
+                                    st.info(f"Absolute Error: **{error:.4f}**")
                                 else:
                                     true_val = label_encoder.transform([true_label_input])[0]
                                     is_correct = int(true_val == prediction)
                                     acc = is_correct * 100
-                                    st.info(f"📈 Accuracy: **{acc:.0f}%**")
+                                    st.info(f"Accuracy: **{acc:.0f}%**")
                             except Exception as e:
                                 st.warning(f"⚠️ Couldn't compute accuracy. Check if the input is valid: {e}")
 
@@ -204,7 +204,7 @@ def home_view():
 
                         st.success("✅ Model trained and SHAP analysis complete!")
 
-                        tab1, tab2 = st.tabs(["Feature Impact", "Shapley Values Overview"])
+                        tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
                         with tab1:
                             st.pyplot(plots['importance']) if 'importance' in plots else None
                         with tab2:
