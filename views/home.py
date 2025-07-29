@@ -136,8 +136,6 @@ def home_view():
                         model = model_module.train(X_numeric, y, **model_params)
 
                         test_df = edited_test_input.copy()
-
-                        test_df = pd.get_dummies(test_df)
                         test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
 
                         waterfall_input = test_df

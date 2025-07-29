@@ -196,7 +196,7 @@ def create_shap_report_pdf(
         bulletType='bullet',
         start='circle'
     )
-    story.append(bullet_list)
+        story.append(bullet_list)
     story.append(Spacer(1, 12))
     
     # 4. Recommendations (bullet points)
@@ -217,5 +217,3 @@ def create_shap_report_pdf(
     doc.build(story)
     buffer.seek(0)
     return buffer.getvalue()
-    
-
