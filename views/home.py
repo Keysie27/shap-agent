@@ -140,9 +140,6 @@ def home_view():
 
                         waterfall_input = test_df
 
-                        st.write("🧪 Test input dataframe (preprocessed):")
-                        st.dataframe(test_df)
-
                         prediction = model.predict(test_df)[0]
                         
                         if module_name == "linear_regression":
@@ -207,7 +204,7 @@ def home_view():
 
                         st.success("✅ Model trained and SHAP analysis complete!")
 
-                        tab1, tab2 = st.tabs(["Feature Impact", "Raw SHAP Values"])
+                        tab1, tab2 = st.tabs(["Feature Impact", "Shapley Values Overview"])
                         with tab1:
                             st.pyplot(plots['importance']) if 'importance' in plots else None
                         with tab2:
