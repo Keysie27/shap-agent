@@ -91,14 +91,21 @@ def home_view():
         st.dataframe(data.head(3))
         st.write(f"Total rows: {data.shape[0]}, Total columns: {data.shape[1]}")
         target_column = st.selectbox("❗Select the target column:", data.columns)
-        true_label_input = st.text_input("✔️ Optional: Enter expected output (for error/accuracy calculation):")
 
         st.subheader("3. Enter data to test your model:")
-        test_input_data = {}
         input_columns = [col for col in data.columns if col != target_column]
-        for col in input_columns:
-            default_val = data[col].median() if np.issubdtype(data[col].dtype, np.number) else ""
-            test_input_data[col] = st.text_input(f"{col}", value=str(default_val), key=f"input_{col}")
+
+        # Matrix for test input
+        default_row = {
+            col: data[col].median() if np.issubdtype(data[col].dtype, np.number) else data[col].mode().iloc[0]
+            for col in input_columns
+        }
+        test_input_df = pd.DataFrame([default_row])
+
+        st.markdown("✍️ Edit your test input values below:")
+        edited_test_input = st.data_editor(test_input_df, use_container_width=True, key="input_matrix")
+
+        true_label_input = st.text_input("🎯 Enter expected output:")
 
         update_field("date", datetime.now().date().isoformat())
 
@@ -128,13 +135,8 @@ def home_view():
                         model_module = importlib.import_module(f"models.sample_models.{module_name}")
                         model = model_module.train(X_numeric, y, **model_params)
 
-                        for key in test_input_data:
-                            try:
-                                test_input_data[key] = float(test_input_data[key])
-                            except ValueError:
-                                pass
+                        test_df = edited_test_input.copy()
 
-                        test_df = pd.DataFrame([test_input_data])
                         test_df = pd.get_dummies(test_df)
                         test_df = test_df.reindex(columns=X_numeric.columns, fill_value=0).astype(float)
 
@@ -162,7 +164,7 @@ def home_view():
                                     true_val = label_encoder.transform([true_label_input])[0]
                                     is_correct = int(true_val == prediction)
                                     acc = is_correct * 100
-                                    st.info(f"🎯 Accuracy: **{acc:.0f}%**")
+                                    st.info(f"📈 Accuracy: **{acc:.0f}%**")
                             except Exception as e:
                                 st.warning(f"⚠️ Couldn't compute accuracy. Check if the input is valid: {e}")
 
